@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NeuroMind — Beyin Antrenmanı</title>
+<meta name="theme-color" content="#0e1120">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NeuroMind">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#0e1120; --bg2:#151a30; --card:#1a2038; --card2:#222947;
+  --text:#eef1ff; --muted:#8b93b8; --line:#2a3153;
+  --memory:#7c5cff; --focus:#00c2a8; --reaction:#ff5c7a; --logic:#ffb020; --math:#38b6ff;
+  --good:#3ddc84; --bad:#ff5c5c; --accent:#7c5cff;
+  --r:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden}
+#app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px}
+.logo{font-weight:800;font-size:20px;letter-spacing:.3px}
+.logo span{background:linear-gradient(90deg,var(--memory),var(--math));-webkit-background-clip:text;background-clip:text;color:transparent}
+.langbtn{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer}
+main{flex:1;padding:6px 16px 90px}
+nav.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:rgba(21,26,48,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:50}
+nav.bottom button{flex:1;background:none;border:none;color:var(--muted);padding:10px 0 14px;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600}
+nav.bottom button .ic{font-size:20px}
+nav.bottom button.on{color:var(--text)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+h2.sect{font-size:15px;color:var(--muted);font-weight:700;margin:18px 4px 10px;text-transform:uppercase;letter-spacing:.6px}
+/* home */
+.scorewrap{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:118px;height:118px;flex:none}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .val b{font-size:28px}
+.ring .val small{color:var(--muted);font-size:11px}
+.catbars{flex:1;display:flex;flex-direction:column;gap:7px}
+.catbar{display:flex;align-items:center;gap:8px;font-size:12px}
+.catbar .nm{width:86px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.catbar .tr{flex:1;height:7px;background:var(--bg2);border-radius:4px;overflow:hidden}
+.catbar .fl{height:100%;border-radius:4px;transition:width .6s}
+.catbar .v{width:32px;text-align:right;font-weight:700;font-size:11px}
+.dailycard{background:linear-gradient(135deg,#2a2160,#173a56);border:1px solid #3a3f77}
+.dailycard h3{font-size:17px;margin-bottom:4px}
+.dailycard p{color:#b8bfe6;font-size:13px;margin-bottom:12px}
+.dailydots{display:flex;gap:8px;margin-bottom:14px}
+.ddot{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid rgba(255,255,255,.12)}
+.ddot.done{background:var(--good);border-color:var(--good);color:#08301b}
+.btn{display:inline-block;background:linear-gradient(90deg,var(--memory),#5a7bff);color:#fff;border:none;border-radius:14px;padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:var(--card2);border:1px solid var(--line)}
+.btn.small{padding:8px 14px;font-size:13px;border-radius:11px}
+.statrow{display:flex;gap:12px}
+.statrow .card{flex:1;text-align:center;padding:14px 8px;margin-bottom:0}
+.statrow b{font-size:22px;display:block}
+.statrow small{color:var(--muted);font-size:11px}
+/* games grid */
+.catgroup{margin-bottom:6px}
+.gamegrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;position:relative;overflow:hidden;transition:transform .1s}
+.gcard:active{transform:scale(.97)}
+.gcard .gic{font-size:30px;margin-bottom:8px;display:block}
+.gcard b{font-size:14px;display:block;margin-bottom:3px}
+.gcard small{color:var(--muted);font-size:11px;display:block;line-height:1.35}
+.gcard .lvl{position:absolute;top:10px;right:10px;font-size:10px;font-weight:800;background:var(--bg2);border-radius:8px;padding:3px 7px;color:var(--muted)}
+.gcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cc,#555)}
+/* play screen */
+#playwrap{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;max-width:560px;margin:0 auto}
+#playwrap.show{display:flex}
+.playhead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.playhead .pname{font-weight:800;font-size:15px}
+.playhead .quit{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:13px}
+.playinfo{display:flex;justify-content:space-between;padding:8px 16px;color:var(--muted);font-size:13px;font-weight:700}
+#timebar{height:5px;background:var(--bg2)}
+#timebarfill{height:100%;width:100%;background:linear-gradient(90deg,var(--good),var(--logic));transition:width .2s linear}
+#gamearea{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;position:relative}
+/* overlays */
+.overlay{position:absolute;inset:0;background:rgba(14,17,32,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;z-index:5}
+.overlay .bigic{font-size:52px;margin-bottom:14px}
+.overlay h3{font-size:22px;margin-bottom:10px}
+.overlay p{color:var(--muted);font-size:15px;line-height:1.5;margin-bottom:22px;max-width:340px}
+.rescore{font-size:52px;font-weight:800;margin:6px 0}
+.resdelta{font-size:15px;font-weight:700;margin-bottom:4px}
+.reslvl{font-size:14px;color:var(--muted);margin-bottom:20px}
+.overlay .btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+/* generic game bits */
+.grid{display:grid;gap:8px}
+.cell{background:var(--card2);border-radius:12px;border:1px solid var(--line);cursor:pointer;transition:background .12s,transform .1s}
+.cell.lit{background:var(--memory);border-color:var(--memory)}
+.cell.ok{background:var(--good)!important;border-color:var(--good)}
+.cell.no{background:var(--bad)!important;border-color:var(--bad)}
+.bigtxt{font-size:56px;font-weight:800;text-align:center}
+.midtxt{font-size:26px;font-weight:700;text-align:center}
+.anschoices{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:360px;margin-top:26px}
+.anschoices button{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:14px;padding:18px 10px;font-size:20px;font-weight:700;cursor:pointer}
+.anschoices button:active{transform:scale(.96)}
+.tapfield{width:100%;height:100%;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;border-radius:0}
+.feedflash{animation:flash .3s}
+@keyframes flash{0%{opacity:.3}100%{opacity:1}}
+input.numin{background:var(--card2);border:1px solid var(--line);color:var(--text);font-size:28px;text-align:center;border-radius:14px;padding:12px;width:240px;font-weight:700;letter-spacing:4px}
+/* stats */
+canvas.chart{width:100%;height:170px}
+.histitem{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-size:13px}
+.histitem:last-child{border:none}
+.histitem .hn{font-weight:700}
+.histitem small{color:var(--muted);display:block;font-size:11px}
+.badgegrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-align:center}
+.badge .bic{font-size:32px;display:block;margin-bottom:6px}
+.badge b{font-size:13px;display:block;margin-bottom:3px}
+.badge small{color:var(--muted);font-size:11px;line-height:1.3;display:block}
+.badge.locked{opacity:.35;filter:grayscale(1)}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line);padding:12px 20px;border-radius:14px;z-index:200;font-weight:700;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:toastin .3s}
+@keyframes toastin{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.hidden{display:none!important}
+/* relax */
+.breathwrap{display:flex;flex-direction:column;align-items:center;padding:26px 0 10px}
+.breathcircle{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3f8f8a,#173a56 70%);box-shadow:0 0 60px rgba(0,194,168,.35);display:flex;align-items:center;justify-content:center;transform:scale(.8);transition:transform 4s linear}
+.breathcircle b{font-size:17px;letter-spacing:.5px}
+.breathmeta{color:var(--muted);font-size:13px;margin-top:18px}
+.relaxopts{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+.chip{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.chip.on{background:var(--focus);border-color:var(--focus);color:#03211c}
+/* profile & sync */
+.profrow{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;cursor:pointer;background:var(--card2)}
+.profrow.on{border-color:var(--memory);box-shadow:0 0 0 1px var(--memory)}
+.profrow .pe{font-size:26px}
+.profrow .pn{flex:1}
+.profrow .pn b{display:block;font-size:15px}
+.profrow .pn small{color:var(--muted);font-size:11px}
+.profrow .px{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px}
+.syncin{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;margin:6px 0}
+.fbrow{display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;justify-content:center}
+.fbrow span{color:var(--muted);font-size:13px;width:100%;text-align:center;margin-bottom:2px}
+.fbrow button{background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer}
+details.helpbox{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:10px;font-size:13px;color:var(--muted)}
+details.helpbox summary{cursor:pointer;font-weight:700;color:var(--text)}
+details.helpbox ol{margin:10px 0 4px 18px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="logo">🧠 Neuro<span>Mind</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="langbtn" id="profbtn" onclick="go('profile')">🦊</button>
+      <button class="langbtn" id="langbtn" onclick="toggleLang()">EN</button>
+    </div>
+  </header>
+  <main id="main"></main>
+  <nav class="bottom" id="nav"></nav>
+</div>
+<div id="playwrap">
+  <div class="playhead">
+    <div class="pname" id="pname"></div>
+    <button class="quit" id="quitbtn"></button>
+  </div>
+  <div class="playinfo"><span id="pinfoL"></span><span id="pinfoR"></span></div>
+  <div id="timebar"><div id="timebarfill"></div></div>
+  <div id="gamearea"></div>
+</div>
+<script>
+"use strict";
+/* ================= i18n ================= */
+const I18N = {
+tr:{
+ nav_home:"Ana Sayfa",nav_games:"Oyunlar",nav_stats:"İstatistik",nav_badges:"Rozetler",
+ brainScore:"Beyin Skoru",noScore:"Henüz oynanmadı",
+ cat_memory:"Hafıza",cat_focus:"Konsantrasyon",cat_reaction:"Tepki",cat_logic:"Mantık",cat_math:"Matematik",
+ daily_title:"Günlük Antrenman",daily_desc:"Zayıf alanlarına göre seçilmiş 5 oyunluk kişisel program.",
+ daily_start:"Antrenmana Başla",daily_continue:"Devam Et",daily_done:"Bugünkü antrenman tamamlandı! 🎉",
+ streak:"Gün Serisi",gamesPlayed:"Oyun",bestCat:"En İyi Alan",
+ level:"Sv",best:"Rekor",play:"Oyna",start:"Başla",quit:"Çık",
+ result_title:"Sonuç",result_points:"puan",lvlUp:"Seviye atladın! →",lvlDown:"Seviye düştü →",lvlSame:"Seviye korundu",
+ retry:"Tekrar",next_game:"Sıradaki Oyun →",back:"Oyunlara Dön",daily_finished:"Antrenman bitti! 🏆",
+ stats_overall:"Genel Gelişim",stats_cats:"Kategori Skorları",stats_recent:"Son Oyunlar",
+ correct:"Doğru",wrong:"Yanlış",time:"Süre",score:"Skor",round:"Tur",
+ newBadge:"Yeni rozet",
+ stats_empty:"Henüz veri yok — bir oyun oyna!",
+ quit_confirm:"Oyundan çıkılsın mı? İlerleme kaydedilmez."
+},
+en:{
+ nav_home:"Home",nav_games:"Games",nav_stats:"Stats",nav_badges:"Badges",
+ brainScore:"Brain Score",noScore:"Not played yet",
+ cat_memory:"Memory",cat_focus:"Focus",cat_reaction:"Reaction",cat_logic:"Logic",cat_math:"Math",
+ daily_title:"Daily Workout",daily_desc:"A personal 5-game program targeting your weakest areas.",
+ daily_start:"Start Workout",daily_continue:"Continue",daily_done:"Today's workout is complete! 🎉",
+ streak:"Day Streak",gamesPlayed:"Games",bestCat:"Best Area",
+ level:"Lv",best:"Best",play:"Play",start:"Start",quit:"Quit",
+ result_title:"Result",result_points:"points",lvlUp:"Level up! →",lvlDown:"Level down →",lvlSame:"Level kept",
+ retry:"Retry",next_game:"Next Game →",back:"Back to Games",daily_finished:"Workout complete! 🏆",
+ stats_overall:"Overall Progress",stats_cats:"Category Scores",stats_recent:"Recent Games",
+ correct:"Correct",wrong:"Wrong",time:"Time",score:"Score",round:"Round",
+ newBadge:"New badge",
+ stats_empty:"No data yet — play a game!",
+ quit_confirm:"Quit the game? Progress won't be saved."
+}};
+function addI18n(o){for(const l in o)Object.assign(I18N[l]=I18N[l]||{},o[l]);}
+function t(k){return (I18N[S.lang]&&I18N[S.lang][k])||I18N.tr[k]||k;}
+
+/* ================= state ================= */
+const CATS = {
+ memory:{icon:"🧩",color:"var(--memory)",hex:"#7c5cff"},
+ focus:{icon:"🎯",color:"var(--focus)",hex:"#00c2a8"},
+ reaction:{icon:"⚡",color:"var(--reaction)",hex:"#ff5c7a"},
+ logic:{icon:"🔍",color:"var(--logic)",hex:"#ffb020"},
+ math:{icon:"➗",color:"var(--math)",hex:"#38b6ff"}
+};
+const DEFAULT = {lang:"tr",bpi:{},levels:{},best:{},history:[],snapshots:[],streak:0,lastPlay:"",badges:[],daily:null,totalGames:0,relax:0,fb:{}};
+const PEMOJI=["🦊","🐼","🦁","🐸","🦉","🐙","🦄","🐯","🐨","🦋"];
+let PROFILES,S;
+function saveProfiles(){try{localStorage.setItem("nm_profiles",JSON.stringify(PROFILES));}catch(e){}}
+function loadProfiles(){
+ try{PROFILES=JSON.parse(localStorage.getItem("nm_profiles")||"null");}catch(e){PROFILES=null;}
+ if(!PROFILES||!PROFILES.list||!PROFILES.list.length){
+  PROFILES={active:"p1",list:[{id:"p1",name:"Profil 1",emoji:PEMOJI[0]}]};
+  // migrate legacy single-profile data
+  try{const old=localStorage.getItem("neuromind");if(old)localStorage.setItem("nm_p_p1",old);}catch(e){}
+  saveProfiles();
+ }
+ if(!PROFILES.list.find(p=>p.id===PROFILES.active))PROFILES.active=PROFILES.list[0].id;
+}
+function loadState(){
+ let raw={};
+ try{raw=JSON.parse(localStorage.getItem("nm_p_"+PROFILES.active)||"{}")||{};}catch(e){}
+ S=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),raw);
+}
+function save(){try{localStorage.setItem("nm_p_"+PROFILES.active,JSON.stringify(S));}catch(e){}}
+loadProfiles();loadState();
+function activeProfile(){return PROFILES.list.find(p=>p.id===PROFILES.active);}
+function switchProfile(id){
+ if(!PROFILES.list.find(p=>p.id===id))return;
+ save();PROFILES.active=id;saveProfiles();loadState();render();
+}
+function addProfile(){
+ const name=(typeof prompt==="function"?prompt(t("prof_name_prompt")):null);
+ if(!name||!name.trim())return;
+ const id="p"+Date.now();
+ const emoji=PEMOJI[PROFILES.list.length%PEMOJI.length];
+ PROFILES.list.push({id,name:name.trim().slice(0,16),emoji});
+ try{localStorage.setItem("nm_p_"+id,JSON.stringify(Object.assign(JSON.parse(JSON.stringify(DEFAULT)),{lang:S.lang})));}catch(e){}
+ saveProfiles();switchProfile(id);
+}
+function deleteProfile(id,ev){
+ if(ev)ev.stopPropagation();
+ if(PROFILES.list.length<=1)return;
+ if(!confirm(t("prof_delete_confirm")))return;
+ PROFILES.list=PROFILES.list.filter(p=>p.id!==id);
+ try{localStorage.removeItem("nm_p_"+id);}catch(e){}
+ if(PROFILES.active===id){PROFILES.active=PROFILES.list[0].id;loadState();}
+ saveProfiles();render();
+}
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+
+/* ================= audio ================= */
+let AC=null;
+function beep(f,d,type){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+const sndOk=()=>beep(880,.12), sndNo=()=>beep(180,.2,"square"), sndWin=()=>{beep(660,.1);setTimeout(()=>beep(880,.1),110);setTimeout(()=>beep(1100,.18),220);};
+
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+function h(html){const d=document.createElement("div");d.innerHTML=html.trim();return d.firstChild;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function toast(msg){const el=h(`<div class="toast">${msg}</div>`);document.body.appendChild(el);setTimeout(()=>el.remove(),2600);}
+function overallBPI(){const v=Object.keys(CATS).map(c=>S.bpi[c]||0).filter(x=>x>0);if(!v.length)return 0;let sum=0;Object.keys(CATS).forEach(c=>sum+=(S.bpi[c]||0));return Math.round(sum/Object.keys(CATS).length);}
+
+/* ================= games registry ================= */
+const GAMES = {};
+function registerGame(g){GAMES[g.id]=g;}
+const gameList = ()=>Object.values(GAMES);
+
+/* ================= navigation ================= */
+let screen="home";
+const NAVS=[["home","🏠","nav_home"],["games","🎮","nav_games"],["relax","🧘","nav_relax"],["stats","📊","nav_stats"],["badges","🏅","nav_badges"]];
+function renderNav(){
+ $("#nav").innerHTML=NAVS.map(([id,ic,k])=>`<button class="${screen===id?'on':''}" onclick="go('${id}')"><span class="ic">${ic}</span>${t(k)}</button>`).join("");
+}
+function go(s){screen=s;render();}
+function toggleLang(){S.lang=S.lang==="tr"?"en":"tr";save();render();}
+function render(){
+ stopRelax();
+ $("#langbtn").textContent=S.lang==="tr"?"EN":"TR";
+ const ap=activeProfile();
+ $("#profbtn").textContent=ap.emoji+" "+ap.name;
+ renderNav();
+ if(screen==="home")renderHome();
+ else if(screen==="games")renderGames();
+ else if(screen==="relax")renderRelax();
+ else if(screen==="stats")renderStats();
+ else if(screen==="profile")renderProfile();
+ else renderBadges();
+}
+
+/* ================= relax ================= */
+addI18n({
+tr:{nav_relax:"Relax",relax_title:"Nefes Egzersizi",relax_desc:"Yoğun bir antrenmandan sonra zihnini sakinleştir. Bir teknik ve süre seç.",
+ rp_box:"Kutu 4-4-4-4",rp_478:"4-7-8",rp_deep:"Derin 5-5",
+ ph_in:"Nefes al",ph_hold:"Tut",ph_out:"Ver",
+ relax_start:"Başlat",relax_stop:"Durdur",relax_done:"Seans tamamlandı 🌿",relax_min:"dk",relax_sessions:"Tamamlanan seans"},
+en:{nav_relax:"Relax",relax_title:"Breathing Exercise",relax_desc:"Calm your mind after an intense workout. Pick a technique and duration.",
+ rp_box:"Box 4-4-4-4",rp_478:"4-7-8",rp_deep:"Deep 5-5",
+ ph_in:"Breathe in",ph_hold:"Hold",ph_out:"Breathe out",
+ relax_start:"Start",relax_stop:"Stop",relax_done:"Session complete 🌿",relax_min:"min",relax_sessions:"Sessions completed"}
+});
+const RPATTERNS={box:[["ph_in",4],["ph_hold",4],["ph_out",4],["ph_hold",4]],p478:[["ph_in",4],["ph_hold",7],["ph_out",8]],deep:[["ph_in",5],["ph_out",5]]};
+let relaxT=[],relaxSel={p:"box",m:2},relaxRunning=false;
+function stopRelax(){relaxT.forEach(clearTimeout);relaxT=[];relaxRunning=false;}
+function renderRelax(){
+ $("#main").innerHTML=`
+ <h2 class="sect">🧘 ${t("relax_title")}</h2>
+ <div class="card">
+  <p style="color:var(--muted);font-size:14px;line-height:1.5">${t("relax_desc")}</p>
+  <div class="relaxopts" id="rpat">${Object.keys(RPATTERNS).map(k=>`<button class="chip ${relaxSel.p===k?'on':''}" data-k="${k}">${t("rp_"+k.replace("p478","478"))}</button>`).join("")}</div>
+  <div class="relaxopts" id="rmin">${[1,2,3,5].map(m=>`<button class="chip ${relaxSel.m===m?'on':''}" data-m="${m}">${m} ${t("relax_min")}</button>`).join("")}</div>
+  <div class="breathwrap">
+   <div class="breathcircle" id="bcirc"><b id="bphase">🧘</b></div>
+   <div class="breathmeta" id="bmeta">${t("relax_sessions")}: ${S.relax||0}</div>
+  </div>
+  <div style="text-align:center;margin-top:8px"><button class="btn" id="rbtn">${t("relax_start")}</button></div>
+ </div>`;
+ $("#rpat").onclick=e=>{const k=e.target.dataset.k;if(k&&!relaxRunning){relaxSel.p=k;renderRelax();}};
+ $("#rmin").onclick=e=>{const m=+e.target.dataset.m;if(m&&!relaxRunning){relaxSel.m=m;renderRelax();}};
+ $("#rbtn").onclick=()=>{relaxRunning?(stopRelax(),renderRelax()):startRelax();};
+}
+function startRelax(){
+ relaxRunning=true;
+ $("#rbtn").textContent=t("relax_stop");
+ $("#rbtn").classList.add("ghost");
+ const pat=RPATTERNS[relaxSel.p];
+ const endAt=Date.now()+relaxSel.m*60000;
+ const circ=$("#bcirc"),ph=$("#bphase"),meta=$("#bmeta");
+ let pi=0;
+ function phase(){
+  if(!relaxRunning)return;
+  if(Date.now()>=endAt){
+   stopRelax();S.relax=(S.relax||0)+1;save();checkBadges();sndWin();
+   toast(t("relax_done"));renderRelax();return;
+  }
+  const [key,secs]=pat[pi%pat.length];pi++;
+  ph.textContent=t(key);
+  circ.style.transition=`transform ${secs}s ease-in-out`;
+  if(key==="ph_in")circ.style.transform="scale(1.25)";
+  else if(key==="ph_out")circ.style.transform="scale(.78)";
+  beep(key==="ph_in"?520:key==="ph_out"?390:460,.15);
+  const left=Math.max(0,Math.ceil((endAt-Date.now())/1000));
+  meta.textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+  relaxT.push(setTimeout(phase,secs*1000));
+ }
+ phase();
+}
+
+/* ================= home ================= */
+function ringSVG(val){
+ const R=50,C=2*Math.PI*R,p=Math.min(1,val/1000);
+ return `<svg width="118" height="118" viewBox="0 0 118 118">
+ <circle cx="59" cy="59" r="${R}" fill="none" stroke="#242b4d" stroke-width="9"/>
+ <circle cx="59" cy="59" r="${R}" fill="none" stroke="url(#gr)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*p} ${C}"/>
+ <defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#38b6ff"/></linearGradient></defs></svg>`;
+}
+function renderHome(){
+ const bpi=overallBPI();
+ const daily=getDaily();
+ const doneCount=daily.done.length;
+ const allDone=doneCount>=daily.games.length;
+ const bestCatKey=Object.keys(CATS).reduce((a,b)=>(S.bpi[a]||0)>=(S.bpi[b]||0)?a:b);
+ $("#main").innerHTML=`
+ <div class="card">
+   <div class="scorewrap">
+     <div class="ring">${ringSVG(bpi)}<div class="val"><b>${bpi||"—"}</b><small>${t("brainScore")}</small></div></div>
+     <div class="catbars">
+       ${Object.keys(CATS).map(c=>`<div class="catbar"><span class="nm">${CATS[c].icon} ${t("cat_"+c)}</span><div class="tr"><div class="fl" style="width:${Math.min(100,(S.bpi[c]||0)/10)}%;background:${CATS[c].hex}"></div></div><span class="v">${S.bpi[c]||"—"}</span></div>`).join("")}
+     </div>
+   </div>
+ </div>
+ <div class="card dailycard">
+   <h3>🗓️ ${t("daily_title")}</h3>
+   <p>${allDone?t("daily_done"):t("daily_desc")}</p>
+   <div class="dailydots">${daily.games.map((g,i)=>`<div class="ddot ${i<doneCount?'done':''}">${i<doneCount?"✓":GAMES[g]?GAMES[g].icon:"?"}</div>`).join("")}</div>
+   ${allDone?"":`<button class="btn" onclick="startDaily()">${doneCount>0?t("daily_continue"):t("daily_start")}</button>`}
+ </div>
+ <div class="statrow">
+   <div class="card"><b>🔥 ${S.streak}</b><small>${t("streak")}</small></div>
+   <div class="card"><b>${S.totalGames}</b><small>${t("gamesPlayed")}</small></div>
+   <div class="card"><b>${(S.bpi[bestCatKey]||0)>0?CATS[bestCatKey].icon:"—"}</b><small>${t("bestCat")}</small></div>
+ </div>`;
+}
+
+/* ================= games screen ================= */
+function renderGames(){
+ let out="";
+ Object.keys(CATS).forEach(c=>{
+   const gs=gameList().filter(g=>g.cat===c);
+   if(!gs.length)return;
+   out+=`<h2 class="sect" style="color:${CATS[c].hex}">${CATS[c].icon} ${t("cat_"+c)}</h2><div class="gamegrid">`;
+   out+=gs.map(g=>`<div class="gcard" style="--cc:${CATS[c].hex}" onclick="startSession('${g.id}')">
+     <span class="lvl">${t("level")} ${S.levels[g.id]||1}</span>
+     <span class="gic">${g.icon}</span><b>${t("g_"+g.id)}</b>
+     <small>${t("g_"+g.id+"_d")}</small>
+     <small style="margin-top:6px;color:${CATS[c].hex};font-weight:700">${t("best")}: ${S.best[g.id]||0}</small>
+   </div>`).join("");
+   out+=`</div>`;
+ });
+ $("#main").innerHTML=out;
+}
+
+/* ================= session framework ================= */
+let cur=null, timerInt=null;
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+function startSession(id,daily){
+ const g=GAMES[id];if(!g)return;
+ cur={id,daily:!!daily,level:S.levels[id]||1,cleanup:null};
+ $("#playwrap").classList.add("show");
+ $("#pname").textContent=g.icon+" "+t("g_"+id);
+ $("#quitbtn").textContent="✕ "+t("quit");
+ $("#quitbtn").onclick=()=>{if(confirm(t("quit_confirm")))closePlay();};
+ $("#pinfoL").textContent=t("level")+" "+cur.level;
+ $("#pinfoR").textContent="";
+ $("#timebarfill").style.width="100%";
+ const area=$("#gamearea");
+ area.innerHTML="";
+ area.appendChild(h(`<div class="overlay"><div class="bigic">${g.icon}</div><h3>${t("g_"+id)}</h3><p>${t("g_"+id+"_i")}</p><button class="btn" id="gostart">${t("start")}</button></div>`));
+ $("#gostart").onclick=()=>{area.innerHTML="";runGame(g);};
+}
+function runGame(g){
+ const api={
+  level:cur.level,
+  area:$("#gamearea"),
+  info:(txt)=>{$("#pinfoR").textContent=txt;},
+  ok:sndOk, no:sndNo,
+  countdown:(secs,onEnd)=>{
+    stopTimer();let left=secs*10;
+    timerInt=setInterval(()=>{left--;$("#timebarfill").style.width=(left/(secs*10)*100)+"%";
+      if(left<=0){stopTimer();onEnd&&onEnd();}},100);
+  },
+  stopCountdown:stopTimer,
+  end:(score,detail)=>finishGame(score,detail)
+ };
+ cur.cleanup=g.start(api)||null;
+}
+function closePlay(){stopTimer();if(cur&&cur.cleanup)try{cur.cleanup();}catch(e){}cur=null;$("#playwrap").classList.remove("show");render();}
+function finishGame(score,detail){
+ stopTimer();if(cur.cleanup){try{cur.cleanup();}catch(e){}cur.cleanup=null;}
+ score=Math.max(0,Math.min(100,Math.round(score)));
+ const g=GAMES[cur.id],cat=g.cat,lvl=cur.level;
+ // BPI update: target reflects score weighted by level mastery
+ const target=Math.round((score/100)*(0.25+0.75*lvl/10)*1000);
+ const old=S.bpi[cat]||0;
+ const nb=old===0?Math.round(target*0.6):Math.round(old+0.28*(target-old));
+ S.bpi[cat]=Math.max(0,Math.min(1000,nb));
+ const delta=S.bpi[cat]-old;
+ // adaptive level
+ let lvlMsg=t("lvlSame"),newLvl=lvl;
+ if(score>=80&&lvl<10){newLvl=lvl+1;lvlMsg=t("lvlUp")+" "+newLvl;}
+ else if(score<45&&lvl>1){newLvl=lvl-1;lvlMsg=t("lvlDown")+" "+newLvl;}
+ S.levels[cur.id]=newLvl;
+ // records
+ const pts=Math.round(score*(1+0.15*(lvl-1)));
+ if(pts>(S.best[cur.id]||0))S.best[cur.id]=pts;
+ S.totalGames++;
+ S.history.unshift({g:cur.id,s:score,p:pts,l:lvl,d:Date.now()});
+ if(S.history.length>100)S.history.length=100;
+ S.snapshots.push(overallBPI());if(S.snapshots.length>80)S.snapshots.shift();
+ // streak
+ const today=todayStr();
+ if(S.lastPlay!==today){
+   const y=new Date();y.setDate(y.getDate()-1);
+   const yStr=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+   S.streak=(S.lastPlay===yStr)?S.streak+1:1;
+   S.lastPlay=today;
+ }
+ // daily progress
+ const daily=getDaily();
+ let dailyNext=null;
+ if(cur.daily){
+   if(!daily.done.includes(cur.id))daily.done.push(cur.id);
+   dailyNext=daily.games.find(x=>!daily.done.includes(x))||null;
+ }
+ save();
+ checkBadges();
+ // result overlay
+ score>=60?sndWin():sndNo();
+ const area=$("#gamearea");
+ const dailyOver=cur.daily&&!dailyNext;
+ area.appendChild(h(`<div class="overlay">
+   <div class="bigic">${score>=80?"🌟":score>=60?"👍":score>=40?"💪":"🙂"}</div>
+   <h3>${dailyOver?t("daily_finished"):t("result_title")}</h3>
+   <div class="rescore" style="color:${CATS[cat].hex}">${score}</div>
+   <div class="resdelta" style="color:${delta>=0?"var(--good)":"var(--bad)"}">${t("cat_"+cat)} BPI ${delta>=0?"+":""}${delta}</div>
+   <div class="reslvl">${lvlMsg}${detail?" • "+detail:""}</div>
+   <div class="fbrow" id="fbrow"><span>${t("fb_q")}</span>
+     <button onclick="fbApply('easy')">😴 ${t("fb_easy")}</button>
+     <button onclick="fbApply('ok')">👌 ${t("fb_ok")}</button>
+     <button onclick="fbApply('hard')">🥵 ${t("fb_hard")}</button>
+   </div>
+   <div class="btns">
+     ${cur.daily?(dailyNext?`<button class="btn" onclick="nextDaily('${dailyNext}')">${t("next_game")}</button>`:"")
+       :`<button class="btn" onclick="retryGame()">${t("retry")}</button>`}
+     <button class="btn ghost" onclick="closePlay()">${t("back")}</button>
+   </div>
+ </div>`));
+}
+function retryGame(){const id=cur.id;closePlay();startSession(id);}
+function nextDaily(id){closePlay();startSession(id,true);}
+function fbApply(kind){
+ if(!cur)return;
+ const id=cur.id;
+ S.fb[id]=S.fb[id]||{easy:0,ok:0,hard:0};
+ S.fb[id][kind]++;
+ const lv=S.levels[id]||1;
+ let msg=t("fb_thanks");
+ if(kind==="easy"&&lv<10){S.levels[id]=lv+1;msg=t("fb_up")+" "+(lv+1);}
+ else if(kind==="hard"&&lv>1){S.levels[id]=lv-1;msg=t("fb_down")+" "+(lv-1);}
+ save();
+ const row=$("#fbrow");
+ if(row)row.innerHTML=`<span style="color:var(--good)">✓ ${msg}</span>`;
+}
+
+/* ================= daily workout ================= */
+function getDaily(){
+ const today=todayStr();
+ if(S.daily&&S.daily.date===today)return S.daily;
+ // weakest categories first; one game per category
+ const cats=Object.keys(CATS).sort((a,b)=>(S.bpi[a]||0)-(S.bpi[b]||0));
+ const games=cats.map(c=>{
+   const gs=gameList().filter(g=>g.cat===c);
+   return gs.length?gs[ri(0,gs.length-1)].id:null;
+ }).filter(Boolean);
+ S.daily={date:today,games,done:[]};
+ save();
+ return S.daily;
+}
+function startDaily(){
+ const d=getDaily();
+ const next=d.games.find(x=>!d.done.includes(x));
+ if(next)startSession(next,true);
+}
+
+/* ================= stats ================= */
+function renderStats(){
+ const hasData=S.snapshots.length>0;
+ $("#main").innerHTML=`
+ <h2 class="sect">${t("stats_overall")}</h2>
+ <div class="card">${hasData?'<canvas class="chart" id="linechart"></canvas>':`<p style="color:var(--muted);font-size:14px">${t("stats_empty")}</p>`}</div>
+ <h2 class="sect">${t("stats_cats")}</h2>
+ <div class="card"><canvas class="chart" id="barchart"></canvas></div>
+ <h2 class="sect">${t("stats_recent")}</h2>
+ <div class="card">${S.history.length?S.history.slice(0,12).map(x=>{
+   const g=GAMES[x.g];if(!g)return"";
+   const d=new Date(x.d);
+   return `<div class="histitem"><div><span class="hn">${g.icon} ${t("g_"+x.g)}</span><small>${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0,5)} • ${t("level")} ${x.l}</small></div><b style="color:${CATS[g.cat].hex}">${x.s}</b></div>`;
+ }).join(""):`<p style="color:var(--muted);font-size:14px">${t("stats_empty")}</p>`}</div>`;
+ if(hasData)drawLine($("#linechart"),S.snapshots);
+ drawBars($("#barchart"));
+}
+function prepCanvas(cv){
+ const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);
+ const ctx=cv.getContext&&cv.getContext("2d");
+ if(!ctx)return [null,0,0];
+ ctx.scale(dpr,dpr);
+ return [ctx,r.width,r.height];
+}
+function drawLine(cv,data){
+ const [ctx,W,H]=prepCanvas(cv);
+ if(!ctx)return;
+ const max=Math.max(100,...data),pad=10;
+ ctx.strokeStyle="#2a3153";ctx.lineWidth=1;
+ for(let i=0;i<4;i++){const y=pad+(H-2*pad)*i/3;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+ if(data.length===1)data=[data[0],data[0]];
+ const grd=ctx.createLinearGradient(0,0,W,0);grd.addColorStop(0,"#7c5cff");grd.addColorStop(1,"#38b6ff");
+ ctx.strokeStyle=grd;ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.beginPath();
+ data.forEach((v,i)=>{const x=pad+(W-2*pad)*i/(data.length-1),y=H-pad-(H-2*pad)*v/max;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+ ctx.stroke();
+}
+function drawBars(cv){
+ const [ctx,W,H]=prepCanvas(cv);
+ if(!ctx)return;
+ const cats=Object.keys(CATS),bw=Math.min(46,(W-40)/cats.length-18),gap=(W-cats.length*bw)/(cats.length+1);
+ ctx.font="700 11px sans-serif";ctx.textAlign="center";
+ cats.forEach((c,i)=>{
+   const v=S.bpi[c]||0,x=gap+(bw+gap)*i,bh=(H-42)*v/1000;
+   ctx.fillStyle="#222947";roundRect(ctx,x,14,bw,H-42,7);ctx.fill();
+   ctx.fillStyle=CATS[c].hex;
+   if(v>0){roundRect(ctx,x,14+(H-42-bh),bw,Math.max(6,bh),7);ctx.fill();}
+   ctx.fillStyle="#8b93b8";ctx.fillText(CATS[c].icon,x+bw/2,H-14);
+   ctx.fillStyle="#eef1ff";ctx.fillText(v||"—",x+bw/2,H-2);
+ });
+}
+function roundRect(ctx,x,y,w,hh,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+hh,r);ctx.arcTo(x+w,y+hh,x,y+hh,r);ctx.arcTo(x,y+hh,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* ================= profile / backup / sync ================= */
+addI18n({
+tr:{prof_title:"Profiller",prof_new:"➕ Yeni Profil",prof_name_prompt:"Profil adı:",prof_delete_confirm:"Bu profil ve tüm ilerlemesi silinsin mi?",prof_stats:"oyun",
+ fb_q:"Zorluk nasıldı?",fb_easy:"Çok kolay",fb_ok:"Tam kararında",fb_hard:"Çok zor",fb_thanks:"Teşekkürler!",fb_up:"Seviye artırıldı →",fb_down:"Seviye düşürüldü →",
+ backup_title:"Yedekleme",backup_desc:"Tüm profilleri dosya olarak indir; başka cihazda içe aktar.",backup_dl:"💾 Yedeği İndir",backup_ul:"📂 Yedek Yükle",backup_done:"Yedek yüklendi ✓",backup_bad:"Geçersiz yedek dosyası",backup_confirm:"Mevcut tüm veriler yedektekilerle DEĞİŞTİRİLECEK. Devam?",
+ sync_title:"Bulut Sync (Firebase)",sync_desc:"İsteğe bağlı: cihazlar arası eşitleme. Kendi ücretsiz Firebase veritabanı adresini gir.",sync_url:"Firebase veritabanı adresi (https://...firebasedatabase.app)",sync_code:"Sync kodu (gizli anahtarın)",sync_gen:"🎲 Üret",sync_push:"☁️ Buluta Gönder",sync_pull:"⬇️ Buluttan Al",sync_pushing:"Gönderiliyor...",sync_pulling:"Alınıyor...",sync_ok_push:"Buluta kaydedildi ✓",sync_ok_pull:"Buluttan yüklendi ✓",sync_err:"Bağlantı hatası — adresi ve kuralları kontrol et",sync_empty:"Bulutta veri bulunamadı",sync_conf:"Buluttaki veri mevcut verilerin yerine geçecek. Devam?",sync_need:"Önce adres ve sync kodu gir",
+ sync_help:"Firebase kurulumu (bir kez, ~3 dk)",
+ g_title:"Google ile Giriş (önerilen)",g_desc:"Google hesabınla gir; verilerin buluta yalnızca senin erişebildiğin alanda kaydedilir.",g_cfg_ph:"firebaseConfig'i buraya yapıştır → { apiKey: \"...\", authDomain: \"...\", databaseURL: \"...\", ... }",g_login:"🔑 Google ile Giriş Yap",g_logout:"Çıkış",g_signedin:"Giriş yapıldı:",g_need_login:"Önce Google ile giriş yap",g_need_db:"databaseURL bulunamadı — firebaseConfig'e ekle",g_need_cfg:"Önce firebaseConfig yapıştır",g_file_warn:"Google girişi https adres gerektirir — uygulamayı GitHub Pages adresinden aç",g_ok:"Giriş başarılı ✓",g_bye:"Çıkış yapıldı",alt_title:"Alternatif: sync kodu ile (hesapsız)",g_help:"Google giriş kurulumu (bir kez, ~5 dk)"},
+en:{prof_title:"Profiles",prof_new:"➕ New Profile",prof_name_prompt:"Profile name:",prof_delete_confirm:"Delete this profile and all its progress?",prof_stats:"games",
+ fb_q:"How was the difficulty?",fb_easy:"Too easy",fb_ok:"Just right",fb_hard:"Too hard",fb_thanks:"Thanks!",fb_up:"Level increased →",fb_down:"Level decreased →",
+ backup_title:"Backup",backup_desc:"Download all profiles as a file; import on another device.",backup_dl:"💾 Download Backup",backup_ul:"📂 Load Backup",backup_done:"Backup loaded ✓",backup_bad:"Invalid backup file",backup_confirm:"ALL current data will be REPLACED by the backup. Continue?",
+ sync_title:"Cloud Sync (Firebase)",sync_desc:"Optional: sync across devices. Enter your own free Firebase database URL.",sync_url:"Firebase database URL (https://...firebasedatabase.app)",sync_code:"Sync code (your secret key)",sync_gen:"🎲 Generate",sync_push:"☁️ Push to Cloud",sync_pull:"⬇️ Pull from Cloud",sync_pushing:"Pushing...",sync_pulling:"Pulling...",sync_ok_push:"Saved to cloud ✓",sync_ok_pull:"Loaded from cloud ✓",sync_err:"Connection error — check URL and rules",sync_empty:"No data found in cloud",sync_conf:"Cloud data will replace current data. Continue?",sync_need:"Enter URL and sync code first",
+ sync_help:"Firebase setup (once, ~3 min)",
+ g_title:"Sign in with Google (recommended)",g_desc:"Sign in with your Google account; your data is stored in the cloud in a space only you can access.",g_cfg_ph:"Paste your firebaseConfig here → { apiKey: \"...\", authDomain: \"...\", databaseURL: \"...\", ... }",g_login:"🔑 Sign in with Google",g_logout:"Sign out",g_signedin:"Signed in:",g_need_login:"Sign in with Google first",g_need_db:"databaseURL missing — add it to firebaseConfig",g_need_cfg:"Paste firebaseConfig first",g_file_warn:"Google sign-in requires an https URL — open the app from its GitHub Pages address",g_ok:"Signed in ✓",g_bye:"Signed out",alt_title:"Alternative: sync code (no account)",g_help:"Google sign-in setup (once, ~5 min)"}
+});
+let SYNC={url:"",code:""};
+try{SYNC=Object.assign(SYNC,JSON.parse(localStorage.getItem("nm_sync")||"{}"));}catch(e){}
+function saveSync(){try{localStorage.setItem("nm_sync",JSON.stringify(SYNC));}catch(e){}}
+function collectAll(){
+ const states={};
+ PROFILES.list.forEach(p=>{try{states[p.id]=JSON.parse(localStorage.getItem("nm_p_"+p.id)||"{}");}catch(e){states[p.id]={};}});
+ states[PROFILES.active]=S;
+ return {app:"neuromind",v:2,exported:Date.now(),profiles:PROFILES,states};
+}
+function applyBackup(data){
+ if(!data||data.app!=="neuromind"||!data.profiles||!data.states)return false;
+ PROFILES=data.profiles;saveProfiles();
+ Object.keys(data.states).forEach(id=>{try{localStorage.setItem("nm_p_"+id,JSON.stringify(data.states[id]));}catch(e){}});
+ loadProfiles();loadState();
+ return true;
+}
+function downloadBackup(){
+ try{
+  const blob=new Blob([JSON.stringify(collectAll(),null,1)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="neuromind-yedek-"+todayStr()+".json";
+  document.body.appendChild(a);a.click();a.remove();
+ }catch(e){toast("⚠️ "+e.message);}
+}
+function uploadBackup(file){
+ const r=new FileReader();
+ r.onload=()=>{
+  try{
+   const data=JSON.parse(r.result);
+   if(!confirm(t("backup_confirm")))return;
+   if(applyBackup(data)){toast(t("backup_done"));render();}
+   else toast("⚠️ "+t("backup_bad"));
+  }catch(e){toast("⚠️ "+t("backup_bad"));}
+ };
+ r.readAsText(file);
+}
+function genSyncCode(){
+ const c=Array.from(crypto.getRandomValues(new Uint8Array(12))).map(b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");
+ SYNC.code=c;saveSync();renderProfile();
+}
+function syncEndpoint(){
+ let u=(SYNC.url||"").trim().replace(/\/+$/,"");
+ if(!u||!SYNC.code)return null;
+ return u+"/neuromind/"+encodeURIComponent(SYNC.code)+".json";
+}
+function readSyncInputs(){
+ const u=$("#syncurl"),c=$("#synccode");
+ if(u)SYNC.url=u.value.trim();
+ if(c)SYNC.code=c.value.trim();
+ saveSync();
+}
+async function syncPush(){
+ readSyncInputs();
+ const ep=syncEndpoint();
+ if(!ep){toast("⚠️ "+t("sync_need"));return;}
+ const st=$("#syncstatus");st.textContent=t("sync_pushing");
+ try{
+  save();
+  const res=await fetch(ep,{method:"PUT",body:JSON.stringify(collectAll())});
+  if(!res.ok)throw new Error(res.status);
+  st.textContent=t("sync_ok_push");toast(t("sync_ok_push"));
+ }catch(e){st.textContent=t("sync_err");toast("⚠️ "+t("sync_err"));}
+}
+async function syncPull(){
+ readSyncInputs();
+ const ep=syncEndpoint();
+ if(!ep){toast("⚠️ "+t("sync_need"));return;}
+ const st=$("#syncstatus");st.textContent=t("sync_pulling");
+ try{
+  const res=await fetch(ep);
+  if(!res.ok)throw new Error(res.status);
+  const data=await res.json();
+  if(!data){st.textContent=t("sync_empty");toast("⚠️ "+t("sync_empty"));return;}
+  if(!confirm(t("sync_conf"))){st.textContent="";return;}
+  if(applyBackup(data)){st.textContent=t("sync_ok_pull");toast(t("sync_ok_pull"));render();}
+  else{st.textContent=t("sync_err");toast("⚠️ "+t("backup_bad"));}
+ }catch(e){st.textContent=t("sync_err");toast("⚠️ "+t("sync_err"));}
+}
+/* ---- Google sign-in (Firebase Auth, lazy-loaded SDK) ---- */
+let gUser=null,gWatched=false,fbLoading=null;
+function parseCfg(txt){
+ try{
+  const m=(txt||"").match(/\{[\s\S]*\}/);
+  if(!m)return null;
+  const o=new Function("return ("+m[0]+")")();
+  return (o&&o.apiKey&&o.authDomain)?o:null;
+ }catch(e){return null;}
+}
+function loadFirebase(){
+ if(window.firebase&&window.firebase.auth)return Promise.resolve();
+ if(fbLoading)return fbLoading;
+ fbLoading=new Promise((res,rej)=>{
+  const urls=["https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js","https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"];
+  let i=0;
+  (function next(){
+   if(i>=urls.length)return res();
+   const s=document.createElement("script");
+   s.src=urls[i++];s.onload=next;
+   s.onerror=()=>{fbLoading=null;rej(new Error("cdn"));};
+   document.head.appendChild(s);
+  })();
+ });
+ return fbLoading;
+}
+function readGCfg(){const el=$("#gcfg");if(el){SYNC.cfg=el.value.trim();saveSync();}}
+async function gEnsure(){
+ const cfg=parseCfg(SYNC.cfg);
+ if(!cfg)throw new Error("cfg");
+ await loadFirebase();
+ if(!firebase.apps.length)firebase.initializeApp(cfg);
+ if(!gWatched){gWatched=true;firebase.auth().onAuthStateChanged(u=>{gUser=u;if(screen==="profile")renderProfile();});}
+ return cfg;
+}
+async function googleLogin(){
+ readGCfg();
+ if(!parseCfg(SYNC.cfg)){toast("⚠️ "+t("g_need_cfg"));return;}
+ if(location.protocol==="file:"){toast("⚠️ "+t("g_file_warn"));return;}
+ try{
+  await gEnsure();
+  await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  SYNC.gOn=true;saveSync();toast(t("g_ok"));
+ }catch(e){toast("⚠️ "+((e&&e.code)||t("sync_err")));}
+}
+async function googleLogout(){
+ try{await firebase.auth().signOut();}catch(e){}
+ gUser=null;SYNC.gOn=false;saveSync();toast(t("g_bye"));
+ if(screen==="profile")renderProfile();
+}
+async function gSync(dir){
+ readGCfg();
+ const st=$("#syncstatus2");
+ try{
+  const cfg=await gEnsure();
+  if(!gUser){toast("⚠️ "+t("g_need_login"));return;}
+  const base=(cfg.databaseURL||SYNC.url||"").trim().replace(/\/+$/,"");
+  if(!base){toast("⚠️ "+t("g_need_db"));return;}
+  const tok=await gUser.getIdToken();
+  const ep=base+"/users/"+gUser.uid+"/neuromind.json?auth="+encodeURIComponent(tok);
+  if(dir==="push"){
+   if(st)st.textContent=t("sync_pushing");
+   save();
+   const res=await fetch(ep,{method:"PUT",body:JSON.stringify(collectAll())});
+   if(!res.ok)throw new Error(res.status);
+   if(st)st.textContent=t("sync_ok_push");toast(t("sync_ok_push"));
+  }else{
+   if(st)st.textContent=t("sync_pulling");
+   const res=await fetch(ep);
+   if(!res.ok)throw new Error(res.status);
+   const data=await res.json();
+   if(!data){if(st)st.textContent=t("sync_empty");toast("⚠️ "+t("sync_empty"));return;}
+   if(!confirm(t("sync_conf"))){if(st)st.textContent="";return;}
+   if(applyBackup(data)){toast(t("sync_ok_pull"));render();}
+   else toast("⚠️ "+t("backup_bad"));
+  }
+ }catch(e){
+  if(e&&e.message==="cfg"){toast("⚠️ "+t("g_need_cfg"));return;}
+  if(st)st.textContent=t("sync_err");
+  toast("⚠️ "+t("sync_err"));
+ }
+}
+function profileGames(id){
+ if(id===PROFILES.active)return S.totalGames;
+ try{return (JSON.parse(localStorage.getItem("nm_p_"+id)||"{}").totalGames)||0;}catch(e){return 0;}
+}
+function renderProfile(){
+ $("#main").innerHTML=`
+ <h2 class="sect">👤 ${t("prof_title")}</h2>
+ <div class="card">
+  ${PROFILES.list.map(p=>`
+   <div class="profrow ${p.id===PROFILES.active?'on':''}" onclick="switchProfile('${p.id}')">
+    <span class="pe">${p.emoji}</span>
+    <span class="pn"><b>${p.name}</b><small>${profileGames(p.id)} ${t("prof_stats")}</small></span>
+    ${PROFILES.list.length>1?`<button class="px" onclick="deleteProfile('${p.id}',event)">🗑</button>`:""}
+   </div>`).join("")}
+  <button class="btn ghost small" onclick="addProfile()">${t("prof_new")}</button>
+ </div>
+ <h2 class="sect">💾 ${t("backup_title")}</h2>
+ <div class="card">
+  <p style="color:var(--muted);font-size:13px;margin-bottom:12px">${t("backup_desc")}</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+   <button class="btn small" onclick="downloadBackup()">${t("backup_dl")}</button>
+   <button class="btn ghost small" onclick="$('#bfile').click()">${t("backup_ul")}</button>
+   <input type="file" id="bfile" accept=".json,application/json" class="hidden" onchange="if(this.files[0])uploadBackup(this.files[0])">
+  </div>
+ </div>
+ <h2 class="sect">☁️ ${t("sync_title")}</h2>
+ <div class="card">
+  <b style="font-size:14px">${t("g_title")}</b>
+  <p style="color:var(--muted);font-size:13px;margin:6px 0 8px">${t("g_desc")}</p>
+  ${gUser?`
+   <div class="profrow on" style="cursor:default"><span class="pe">👤</span>
+    <span class="pn"><b>${gUser.displayName||""}</b><small>${t("g_signedin")} ${gUser.email||""}</small></span>
+   </div>
+   <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn small" onclick="gSync('push')">${t("sync_push")}</button>
+    <button class="btn ghost small" onclick="gSync('pull')">${t("sync_pull")}</button>
+    <button class="btn ghost small" onclick="googleLogout()">${t("g_logout")}</button>
+   </div>`
+  :`
+   <textarea class="syncin" id="gcfg" rows="3" placeholder='${t("g_cfg_ph")}'>${SYNC.cfg||""}</textarea>
+   <button class="btn small" onclick="googleLogin()">${t("g_login")}</button>`}
+  <div id="syncstatus2" style="color:var(--muted);font-size:13px;margin-top:10px;min-height:18px"></div>
+  <details class="helpbox"><summary>${t("g_help")}</summary>
+   <ol>
+    <li><b>GitHub Pages:</b> GitHub Desktop → File → New repository (<i>neuromind</i>) → dosyaları repo klasörüne kopyala (index.html kökte) → Commit → <b>Publish repository</b> (private işaretini kaldır) → github.com'da Settings → Pages → Branch: <b>main / root</b>. Adresin: <i>kullaniciadi.github.io/neuromind</i></li>
+    <li>console.firebase.google.com → <b>Create project</b> (Analytics kapatılabilir).</li>
+    <li>Build → <b>Authentication</b> → Get started → Sign-in method → <b>Google</b> → Enable.</li>
+    <li>Authentication → Settings → <b>Authorized domains</b> → <b>kullaniciadi.github.io</b> adresini ekle.</li>
+    <li>Build → <b>Realtime Database</b> → Create database → <b>locked mode</b> seç → Rules sekmesine şunu yapıştır:<br>
+     <code>{"rules":{"users":{"$uid":{".read":"auth.uid===$uid",".write":"auth.uid===$uid"}}}}</code></li>
+    <li>Project settings (⚙️) → General → Your apps → <b>Web app (&lt;/&gt;)</b> ekle → görünen <b>firebaseConfig</b>'i kopyala, yukarıdaki kutuya yapıştır. İçinde <b>databaseURL</b> yoksa Realtime Database sayfasındaki <i>https://...firebasedatabase.app</i> adresini <code>databaseURL: "..."</code> olarak ekle.</li>
+    <li><b>Google ile Giriş Yap</b> → diğer cihazda da aynı config ile giriş yap → Gönder/Al.</li>
+   </ol>
+   ⚠️ Google girişi https gerektirir: uygulamayı GitHub Pages adresinden aç (bilgisayarda çift tıklanan dosyada çalışmaz). Bu kurallarla verine yalnızca kendi hesabın erişebilir.
+  </details>
+  <details class="helpbox"><summary>${t("alt_title")}</summary>
+   <p style="margin:8px 0;color:var(--muted);font-size:13px">${t("sync_desc")}</p>
+   <input class="syncin" id="syncurl" placeholder="${t("sync_url")}" value="${SYNC.url||""}">
+   <div style="display:flex;gap:8px">
+    <input class="syncin" id="synccode" placeholder="${t("sync_code")}" value="${SYNC.code||""}">
+    <button class="btn ghost small" style="flex:none" onclick="readSyncInputs();genSyncCode()">${t("sync_gen")}</button>
+   </div>
+   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+    <button class="btn small" onclick="syncPush()">${t("sync_push")}</button>
+    <button class="btn ghost small" onclick="syncPull()">${t("sync_pull")}</button>
+   </div>
+   <div id="syncstatus" style="color:var(--muted);font-size:13px;margin-top:10px;min-height:18px"></div>
+   <div style="color:var(--muted);font-size:12px;margin-top:6px">Realtime Database'i <b>test mode</b> ile aç, adresi yukarı yapıştır, kod üret; aynı adres+kodu diğer cihaza gir. Sync kodun şifre gibidir — paylaşma.</div>
+  </details>
+ </div>`;
+ if(SYNC.gOn&&SYNC.cfg&&!gUser)gEnsure().catch(()=>{});
+}
+
+/* ================= badges ================= */
+const BADGES=[
+ {id:"first",icon:"🚀",check:s=>s.totalGames>=1},
+ {id:"g10",icon:"🎯",check:s=>s.totalGames>=10},
+ {id:"g50",icon:"🏋️",check:s=>s.totalGames>=50},
+ {id:"g200",icon:"🦾",check:s=>s.totalGames>=200},
+ {id:"s3",icon:"🔥",check:s=>s.streak>=3},
+ {id:"s7",icon:"⚡",check:s=>s.streak>=7},
+ {id:"s30",icon:"🌋",check:s=>s.streak>=30},
+ {id:"b400",icon:"🧠",check:s=>overallBPI()>=400},
+ {id:"b700",icon:"💎",check:s=>overallBPI()>=700},
+ {id:"allcat",icon:"🌈",check:s=>Object.keys(CATS).every(c=>(s.bpi[c]||0)>0)},
+ {id:"daily1",icon:"🗓️",check:s=>s.daily&&s.daily.done.length>=s.daily.games.length&&s.daily.games.length>0},
+ {id:"perfect",icon:"🌟",check:s=>s.history.some(x=>x.s>=100)},
+ {id:"lvl5",icon:"📈",check:s=>Object.values(s.levels).some(l=>l>=5)},
+ {id:"lvl10",icon:"👑",check:s=>Object.values(s.levels).some(l=>l>=10)},
+ {id:"zen",icon:"🧘",check:s=>(s.relax||0)>=1},
+ {id:"zen10",icon:"🌿",check:s=>(s.relax||0)>=10}
+];
+addI18n({
+tr:{badge_first:"İlk Adım",badge_first_d:"İlk oyununu oyna",badge_g10:"Isınma",badge_g10_d:"10 oyun tamamla",badge_g50:"Antrenör",badge_g50_d:"50 oyun tamamla",badge_g200:"Demir Beyin",badge_g200_d:"200 oyun tamamla",badge_s3:"Kıvılcım",badge_s3_d:"3 günlük seri",badge_s7:"Alev",badge_s7_d:"7 günlük seri",badge_s30:"Volkan",badge_s30_d:"30 günlük seri",badge_b400:"Gelişen Zihin",badge_b400_d:"400 Beyin Skoru",badge_b700:"Elmas Zihin",badge_b700_d:"700 Beyin Skoru",badge_allcat:"Çok Yönlü",badge_allcat_d:"Her kategoride oyna",badge_daily1:"Disiplin",badge_daily1_d:"Bir günlük antrenmanı bitir",badge_perfect:"Kusursuz",badge_perfect_d:"100 puanlık oyun",badge_lvl5:"Tırmanış",badge_lvl5_d:"Bir oyunda 5. seviye",badge_lvl10:"Zirve",badge_lvl10_d:"Bir oyunda 10. seviye",badge_zen:"Zen",badge_zen_d:"İlk nefes seansını bitir",badge_zen10:"İç Huzur",badge_zen10_d:"10 nefes seansı bitir"},
+en:{badge_first:"First Step",badge_first_d:"Play your first game",badge_g10:"Warm-up",badge_g10_d:"Complete 10 games",badge_g50:"Trainer",badge_g50_d:"Complete 50 games",badge_g200:"Iron Brain",badge_g200_d:"Complete 200 games",badge_s3:"Spark",badge_s3_d:"3-day streak",badge_s7:"Flame",badge_s7_d:"7-day streak",badge_s30:"Volcano",badge_s30_d:"30-day streak",badge_b400:"Growing Mind",badge_b400_d:"Brain Score 400",badge_b700:"Diamond Mind",badge_b700_d:"Brain Score 700",badge_allcat:"All-Rounder",badge_allcat_d:"Play every category",badge_daily1:"Discipline",badge_daily1_d:"Finish a daily workout",badge_perfect:"Flawless",badge_perfect_d:"Score 100 in a game",badge_lvl5:"Climber",badge_lvl5_d:"Reach level 5 in a game",badge_lvl10:"Summit",badge_lvl10_d:"Reach level 10 in a game",badge_zen:"Zen",badge_zen_d:"Finish your first breathing session",badge_zen10:"Inner Peace",badge_zen10_d:"Finish 10 breathing sessions"}
+});
+function checkBadges(){
+ BADGES.forEach(b=>{
+  if(!S.badges.includes(b.id)&&b.check(S)){S.badges.push(b.id);save();toast(b.icon+" "+t("newBadge")+": "+t("badge_"+b.id));}
+ });
+}
+function renderBadges(){
+ $("#main").innerHTML=`<h2 class="sect">${t("nav_badges")} (${S.badges.length}/${BADGES.length})</h2>
+ <div class="badgegrid">${BADGES.map(b=>`<div class="badge ${S.badges.includes(b.id)?"":"locked"}"><span class="bic">${b.icon}</span><b>${t("badge_"+b.id)}</b><small>${t("badge_"+b.id+"_d")}</small></div>`).join("")}</div>`;
+}
+
+/* ================= GAMES ================= */
+
+/* ---- 1. Desen Hafızası / Pattern Memory ---- */
+addI18n({
+tr:{g_pattern:"Desen Hafızası",g_pattern_d:"Yanan kareleri aklında tut",g_pattern_i:"Kareler kısa süre yanacak. Söndükten sonra yanan karelere dokun. 3 tur oynanır."},
+en:{g_pattern:"Pattern Memory",g_pattern_d:"Memorize the lit tiles",g_pattern_i:"Tiles will light up briefly. After they go dark, tap the tiles that were lit. 3 rounds."}
+});
+registerGame({id:"pattern",cat:"memory",icon:"🟪",
+start(api){
+ let alive=true,round=0,hits=0,errs=0,totalT=0,timers=[];
+ const lvl=api.level;
+ const size=3+Math.floor((lvl-1)/4);          // 3..5
+ const k=Math.min(size*size-2,3+Math.ceil(lvl/2)); // targets
+ const showMs=Math.max(500,1300-lvl*70);
+ function later(fn,ms){timers.push(setTimeout(fn,ms));}
+ function playRound(){
+  if(!alive)return;
+  round++;api.info(t("round")+" "+round+"/3");
+  const cellPx=Math.floor(Math.min(300,window.innerWidth-80)/size);
+  const cells=[];
+  const grid=h(`<div class="grid" style="grid-template-columns:repeat(${size},${cellPx}px)"></div>`);
+  for(let i=0;i<size*size;i++){const c=h(`<div class="cell" style="height:${cellPx}px"></div>`);cells.push(c);grid.appendChild(c);}
+  api.area.innerHTML="";api.area.appendChild(grid);
+  const targets=shuffle([...Array(size*size).keys()]).slice(0,k);
+  totalT+=k;
+  later(()=>{targets.forEach(i=>cells[i].classList.add("lit"));},400);
+  later(()=>{
+   if(!alive)return;
+   cells.forEach(c=>c.classList.remove("lit"));
+   let picks=0;
+   cells.forEach((c,i)=>c.onclick=()=>{
+    if(!alive||c.dataset.done)return;
+    c.dataset.done=1;picks++;
+    if(targets.includes(i)){c.classList.add("ok");hits++;api.ok();}
+    else{c.classList.add("no");errs++;api.no();}
+    if(picks>=k)later(()=>round<3?playRound():api.end(Math.max(0,(hits-0.5*errs)/totalT*100),hits+"/"+totalT),700);
+   });
+  },400+showMs);
+ }
+ playRound();
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
+/* ---- 2. Sayı Dizisi / Digit Span ---- */
+addI18n({
+tr:{g_digits:"Sayı Dizisi",g_digits_d:"Sayıyı ezberle ve yaz",g_digits_i:"Ekranda beliren sayıyı ezberle. Kaybolunca hatırladığını yaz. 3 tur oynanır."},
+en:{g_digits:"Digit Span",g_digits_d:"Memorize and type the number",g_digits_i:"Memorize the number shown on screen. When it disappears, type what you remember. 3 rounds."}
+});
+registerGame({id:"digits",cat:"memory",icon:"🔢",
+start(api){
+ let alive=true,round=0,scoreSum=0,timers=[];
+ const len=Math.min(11,3+Math.ceil(api.level*0.7));
+ function later(fn,ms){timers.push(setTimeout(fn,ms));}
+ function playRound(){
+  if(!alive)return;
+  round++;api.info(t("round")+" "+round+"/3");
+  let num="";for(let i=0;i<len;i++)num+=(i===0?ri(1,9):ri(0,9));
+  api.area.innerHTML=`<div class="bigtxt" style="letter-spacing:6px">${num}</div>`;
+  later(()=>{
+   if(!alive)return;
+   api.area.innerHTML="";
+   const inp=h(`<input class="numin" inputmode="numeric" maxlength="${len+2}" autocomplete="off">`);
+   const ok=h(`<button class="btn" style="margin-top:18px">OK</button>`);
+   api.area.appendChild(inp);api.area.appendChild(ok);
+   inp.focus();
+   const submit=()=>{
+    if(!alive)return;
+    const v=(inp.value||"").trim();
+    let c=0;for(let i=0;i<len;i++)if(v[i]===num[i])c++;
+    scoreSum+=c/len*100;
+    c===len?api.ok():api.no();
+    round<3?later(playRound,500):api.end(scoreSum/3,len+" "+(S.lang==="tr"?"hane":"digits"));
+   };
+   ok.onclick=submit;
+   inp.onkeydown=e=>{if(e.key==="Enter")submit();};
+  },700+len*550);
+ }
+ playRound();
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
+/* ---- 3. N-Back ---- */
+addI18n({
+tr:{g_nback:"N-Back",g_nback_d:"Bilimsel çalışma belleği testi",g_nback_i:"Kareler sırayla yanar. Yanan kare N adım öncekiyle AYNI konumdaysa 'Eşleşme' butonuna bas. Bilimsel olarak en etkili hafıza antrenmanıdır.",nb_match:"Eşleşme!",nb_n:"geri"},
+en:{g_nback:"N-Back",g_nback_d:"Scientific working-memory task",g_nback_i:"Tiles light up one by one. Press 'Match' when the position is the SAME as N steps back. The most scientifically supported memory exercise.",nb_match:"Match!",nb_n:"back"}
+});
+registerGame({id:"nback",cat:"memory",icon:"🧬",
+start(api){
+ let alive=true,timers=[];
+ const lvl=api.level;
+ const n=lvl<=3?1:lvl<=7?2:3;
+ const isi=Math.max(1400,2600-lvl*130);
+ const TRIALS=18;
+ // build sequence with ~6 forced matches
+ const seq=[];
+ for(let i=0;i<TRIALS;i++){
+  if(i>=n&&seq.filter((v,j)=>j>=n&&v===seq[j-n]).length<6&&Math.random()<0.38)seq.push(seq[i-n]);
+  else{let p;do{p=ri(0,8);}while(i>=n&&p===seq[i-n]&&Math.random()<0.7);seq.push(p);}
+ }
+ const targets=seq.filter((v,i)=>i>=n&&v===seq[i-n]).length||1;
+ let hits=0,fa=0,idx=-1,pressed=false;
+ const cellPx=Math.floor(Math.min(260,window.innerWidth-120)/3);
+ const cells=[];
+ const grid=h(`<div class="grid" style="grid-template-columns:repeat(3,${cellPx}px)"></div>`);
+ for(let i=0;i<9;i++){const c=h(`<div class="cell" style="height:${cellPx}px"></div>`);cells.push(c);grid.appendChild(c);}
+ const btn=h(`<button class="btn" style="margin-top:26px;min-width:180px">⭐ ${t("nb_match")} (${n}-${t("nb_n")})</button>`);
+ api.area.innerHTML="";api.area.appendChild(grid);api.area.appendChild(btn);
+ btn.onclick=()=>{
+  if(!alive||idx<n||pressed)return;
+  pressed=true;
+  if(seq[idx]===seq[idx-n]){hits++;api.ok();}else{fa++;api.no();}
+ };
+ function later(fn,ms){timers.push(setTimeout(fn,ms));}
+ function step(){
+  if(!alive)return;
+  idx++;
+  if(idx>=TRIALS){api.end(Math.max(0,(hits-fa)/targets*100),hits+"/"+targets);return;}
+  pressed=false;
+  api.info((idx+1)+"/"+TRIALS);
+  cells.forEach(c=>c.classList.remove("lit"));
+  later(()=>{if(alive)cells[seq[idx]].classList.add("lit");},120);
+  later(()=>{if(alive)cells[seq[idx]].classList.remove("lit");},120+Math.min(700,isi-500));
+  later(step,isi);
+ }
+ step();
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
+/* ---- 4. Renk Çatışması / Stroop ---- */
+addI18n({
+tr:{g_stroop:"Renk Çatışması",g_stroop_d:"Yazıya değil renge odaklan",g_stroop_i:"Kelimenin ANLAMINA değil, yazıldığı MÜREKKEP RENGİNE göre doğru renk butonuna bas. 45 saniyen var.",c_red:"KIRMIZI",c_blue:"MAVİ",c_green:"YEŞİL",c_yellow:"SARI"},
+en:{g_stroop:"Color Clash",g_stroop_d:"Focus on ink, not word",g_stroop_i:"Press the button matching the INK COLOR of the word, not its meaning. You have 45 seconds.",c_red:"RED",c_blue:"BLUE",c_green:"GREEN",c_yellow:"YELLOW"}
+});
+registerGame({id:"stroop",cat:"focus",icon:"🎨",
+start(api){
+ let alive=true,correct=0,wrong=0;
+ const colors=[["c_red","#ff5c5c"],["c_blue","#38b6ff"],["c_green","#3ddc84"],["c_yellow","#ffd54a"]];
+ const target=14+api.level*2;
+ const word=h(`<div class="bigtxt" style="min-height:80px"></div>`);
+ const cho=h(`<div class="anschoices"></div>`);
+ api.area.innerHTML="";api.area.appendChild(word);api.area.appendChild(cho);
+ let ink;
+ function trial(){
+  if(!alive)return;
+  const w=colors[ri(0,3)];
+  ink=colors[ri(0,3)];
+  if(Math.random()<0.65)while(ink[0]===w[0]&&colors.length>1)ink=colors[ri(0,3)];
+  word.textContent=t(w[0]);
+  word.style.color=ink[1];
+  word.classList.remove("feedflash");void word.offsetWidth;word.classList.add("feedflash");
+ }
+ shuffle([...colors]).forEach(c=>{
+  const b=h(`<button style="color:${c[1]}">${t(c[0])}</button>`);
+  b.onclick=()=>{
+   if(!alive)return;
+   if(c[0]===ink[0]){correct++;api.ok();}else{wrong++;api.no();}
+   api.info("✓"+correct+" ✗"+wrong);
+   trial();
+  };
+  cho.appendChild(b);
+ });
+ trial();
+ api.countdown(45,()=>{if(alive)api.end(Math.min(100,Math.max(0,(correct-0.5*wrong)/target*100)),"✓"+correct);});
+ return ()=>{alive=false;};
+}});
+
+/* ---- 5. Çift Bul / Memory Pairs ---- */
+addI18n({
+tr:{g_pairs:"Çift Bul",g_pairs_d:"Eş kartları en az hamlede bul",g_pairs_i:"Kartları çevirip eşleri bul. Ne kadar az hamle ve kısa sürede bitirirsen o kadar yüksek puan alırsın."},
+en:{g_pairs:"Find Pairs",g_pairs_d:"Match cards in fewest moves",g_pairs_i:"Flip cards to find matching pairs. Fewer moves and faster time means a higher score."}
+});
+registerGame({id:"pairs",cat:"focus",icon:"🃏",
+start(api){
+ let alive=true,timers=[];
+ const EMO=["🍎","🌙","⚓","🎈","🐬","🌵","🎲","🔥","🦋","⭐","🍩","🎧","🚀","🌈","🧿","🍀"];
+ const pairs=Math.min(10,5+Math.floor(api.level/2));
+ const secs=Math.max(40,80-api.level*3);
+ const syms=shuffle([...EMO]).slice(0,pairs);
+ const deck=shuffle([...syms,...syms]);
+ const cols=pairs<=6?3:4;
+ const cellPx=Math.floor(Math.min(330,window.innerWidth-60)/cols)-8;
+ let open=[],moves=0,found=0,lock=false;
+ const grid=h(`<div class="grid" style="grid-template-columns:repeat(${cols},${cellPx}px)"></div>`);
+ api.area.innerHTML="";api.area.appendChild(grid);
+ deck.forEach((sym,i)=>{
+  const c=h(`<div class="cell" style="height:${cellPx}px;display:flex;align-items:center;justify-content:center;font-size:${Math.floor(cellPx*0.5)}px"></div>`);
+  c.onclick=()=>{
+   if(!alive||lock||c.dataset.f||open.includes(c))return;
+   c.textContent=sym;c.classList.add("lit");open.push(c);c.dataset.s=sym;
+   if(open.length===2){
+    moves++;api.info(moves+" ♟");
+    const [a,b]=open;
+    if(a.dataset.s===b.dataset.s){
+     a.dataset.f=b.dataset.f=1;a.classList.add("ok");b.classList.add("ok");found++;api.ok();open=[];
+     if(found===pairs){
+      api.stopCountdown();
+      const eff=Math.max(0,Math.min(1,(pairs*2.6-moves)/(pairs*1.6)));
+      api.end(40+eff*60,moves+" ♟");
+     }
+    }else{
+     lock=true;api.no();
+     timers.push(setTimeout(()=>{a.textContent=b.textContent="";a.classList.remove("lit");b.classList.remove("lit");open=[];lock=false;},650));
+    }
+   }
+  };
+  grid.appendChild(c);
+ });
+ api.countdown(secs,()=>{if(alive)api.end(found/pairs*45,found+"/"+pairs);});
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
+/* ---- 6. Refleks Testi / Reaction Time ---- */
+addI18n({
+tr:{g_react:"Refleks Testi",g_react_d:"Yeşili görünce dokun",g_react_i:"Ekran KIRMIZI iken bekle. YEŞİL olduğu anda dokun! Erken dokunursan ceza alırsın. 5 tur oynanır.",rt_wait:"Bekle...",rt_go:"DOKUN!",rt_early:"Çok erken! ⛔",rt_avg:"ortalama"},
+en:{g_react:"Reflex Test",g_react_d:"Tap when it turns green",g_react_i:"Wait while the screen is RED. Tap the moment it turns GREEN! Tapping early costs points. 5 rounds.",rt_wait:"Wait...",rt_go:"TAP!",rt_early:"Too early! ⛔",rt_avg:"average"}
+});
+registerGame({id:"react",cat:"reaction",icon:"🚦",
+start(api){
+ let alive=true,round=0,times=[],falseStarts=0,timers=[],goAt=0,state="idle";
+ const field=h(`<div class="tapfield" style="background:#3a1f2e"><div class="midtxt" id="rtxt"></div><div style="color:var(--muted);margin-top:10px;font-size:14px" id="rsub"></div></div>`);
+ api.area.innerHTML="";api.area.appendChild(field);
+ const txt=()=>field.querySelector("#rtxt"),sub=()=>field.querySelector("#rsub");
+ function later(fn,ms){timers.push(setTimeout(fn,ms));}
+ function startRound(){
+  if(!alive)return;
+  round++;api.info(t("round")+" "+round+"/5");
+  state="wait";field.style.background="#5c2333";txt().textContent=t("rt_wait");sub().textContent="";
+  later(()=>{if(!alive||state!=="wait")return;state="go";field.style.background="#14532d";txt().textContent=t("rt_go");goAt=performance.now();},ri(1200,3200));
+ }
+ field.onclick=()=>{
+  if(!alive)return;
+  if(state==="wait"){falseStarts++;state="idle";field.style.background="#3a1f2e";txt().textContent=t("rt_early");api.no();later(startRound,900);}
+  else if(state==="go"){
+   const ms=Math.round(performance.now()-goAt);
+   times.push(ms);state="idle";api.ok();
+   field.style.background="#1a2038";txt().textContent=ms+" ms";sub().textContent="";
+   if(round<5)later(startRound,1000);
+   else{
+    const avg=Math.round(times.reduce((a,b)=>a+b,0)/times.length);
+    const sc=Math.max(0,Math.min(100,(700-avg)/(700-210)*100))-falseStarts*8;
+    later(()=>api.end(Math.max(0,sc),avg+" ms "+t("rt_avg")),700);
+   }
+  }
+ };
+ startRound();
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
+/* ---- 7. Hızlı Karar / Go-NoGo ---- */
+addI18n({
+tr:{g_gonogo:"Hızlı Karar",g_gonogo_d:"Sadece hedef sembole dokun",g_gonogo_i:"Semboller hızla değişir. SADECE hedef sembolü gördüğünde ekrana dokun, diğerlerinde kendini tut! 40 saniye.",gn_target:"Hedef"},
+en:{g_gonogo:"Quick Decision",g_gonogo_d:"Tap only the target symbol",g_gonogo_i:"Symbols change rapidly. Tap ONLY when you see the target symbol — hold back for the others! 40 seconds.",gn_target:"Target"}
+});
+registerGame({id:"gonogo",cat:"reaction",icon:"🎯",
+start(api){
+ let alive=true,timers=[],hits=0,fa=0,shown=0,targetsShown=0,isTarget=false,tapped=false;
+ const SYM=["🔺","🔷","⬛","🟡","✳️","🟣"];
+ const syms=shuffle([...SYM]).slice(0,Math.min(6,3+Math.floor(api.level/3)));
+ const target=syms[0];
+ const speed=Math.max(650,1050-api.level*40);
+ const field=h(`<div class="tapfield"><div style="color:var(--muted);font-size:14px;margin-bottom:16px">${t("gn_target")}: <span style="font-size:26px">${target}</span></div><div class="bigtxt" id="gsym" style="font-size:88px;min-height:110px"></div></div>`);
+ api.area.innerHTML="";api.area.appendChild(field);
+ const symEl=field.querySelector("#gsym");
+ function later(fn,ms){timers.push(setTimeout(fn,ms));}
+ function next(){
+  if(!alive)return;
+  if(isTarget&&!tapped){/* miss */}
+  isTarget=Math.random()<0.4;
+  tapped=false;shown++;
+  if(isTarget)targetsShown++;
+  symEl.textContent=isTarget?target:syms[ri(1,syms.length-1)];
+  later(next,speed);
+ }
+ field.onclick=()=>{
+  if(!alive||tapped)return;
+  tapped=true;
+  if(isTarget){hits++;api.ok();}else{fa++;api.no();}
+  api.info("✓"+hits+" ✗"+fa);
+ };
+ next();
+ api.countdown(40,()=>{if(alive)api.end(Math.max(0,(hits-fa)/Math.max(1,targetsShown)*100),hits+"/"+targetsShown);});
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
+/* ---- 8. Seri Tamamlama / Sequence ---- */
+addI18n({
+tr:{g_seq:"Seri Tamamlama",g_seq_d:"Dizideki kuralı çöz",g_seq_i:"Sayı dizisindeki kuralı bul ve sıradaki sayıyı seç. 8 soru, 90 saniye."},
+en:{g_seq:"Sequence Solver",g_seq_d:"Crack the pattern",g_seq_i:"Find the rule in the number sequence and pick the next number. 8 questions, 90 seconds."}
+});
+registerGame({id:"seq",cat:"logic",icon:"🔗",
+start(api){
+ let alive=true,qn=0,correct=0;
+ const lvl=api.level;
+ function genSeq(){
+  const kind=ri(1,lvl<=3?3:lvl<=6?5:7);
+  let a,d,r,arr=[];
+  switch(kind){
+   case 1:a=ri(1,20);d=ri(2,9);arr=[a,a+d,a+2*d,a+3*d];return[arr,a+4*d];
+   case 2:a=ri(15,60);d=ri(2,9);arr=[a,a-d,a-2*d,a-3*d];return[arr,a-4*d];
+   case 3:a=ri(1,5);r=ri(2,3);arr=[a,a*r,a*r*r,a*r*r*r];return[arr,a*r*r*r*r];
+   case 4:a=ri(1,10);d=ri(2,5);arr=[a,a+d,a+d*2,a+d*4,a+d*7];return[arr,a+d*11]; // +1x,+2x,+3x..
+   case 5:a=ri(1,8);d=ri(3,9);arr=[a,a+d,a,a+2*d,a];return[arr,a+3*d]; // alternating
+   case 6:a=ri(1,6);arr=[a,a+1];for(let i=2;i<5;i++)arr.push(arr[i-1]+arr[i-2]);return[arr,arr[4]+arr[3]];
+   default:{const s=ri(2,6);arr=[s*s,(s+1)*(s+1),(s+2)*(s+2),(s+3)*(s+3)];return[arr,(s+4)*(s+4)];}
+  }
+ }
+ function question(){
+  if(!alive)return;
+  qn++;api.info(qn+"/8");
+  const [arr,ans]=genSeq();
+  const opts=new Set([ans]);
+  while(opts.size<4)opts.add(ans+shuffle([-3,-2,-1,1,2,3,4,ri(5,12),-ri(4,9)])[0]);
+  const cho=shuffle([...opts]);
+  api.area.innerHTML="";
+  api.area.appendChild(h(`<div class="midtxt" style="letter-spacing:2px">${arr.join(" , ")} , <span style="color:var(--logic)">?</span></div>`));
+  const box=h(`<div class="anschoices"></div>`);
+  cho.forEach(o=>{
+   const b=h(`<button>${o}</button>`);
+   b.onclick=()=>{
+    if(!alive)return;
+    if(o===ans){correct++;api.ok();}else api.no();
+    qn<8?question():(api.stopCountdown(),api.end(correct/8*100,"✓"+correct+"/8"));
+   };
+   box.appendChild(b);
+  });
+  api.area.appendChild(box);
+ }
+ question();
+ api.countdown(90,()=>{if(alive)api.end(correct/8*100,"✓"+correct+"/8")});
+ return ()=>{alive=false;};
+}});
+
+/* ---- 9. Farklıyı Bul / Odd One Out ---- */
+addI18n({
+tr:{g_odd:"Farklıyı Bul",g_odd_d:"Farklı olan sembolü yakala",g_odd_i:"Tabloda diğerlerinden FARKLI olan tek sembolü bul ve dokun. 45 saniyede olabildiğince çok tur bitir."},
+en:{g_odd:"Odd One Out",g_odd_d:"Spot the different symbol",g_odd_i:"Find and tap the ONE symbol that differs from the rest. Clear as many rounds as you can in 45 seconds."}
+});
+registerGame({id:"odd",cat:"logic",icon:"👁️",
+start(api){
+ let alive=true,solved=0,errs=0;
+ const lvl=api.level;
+ const PAIRS=[["🙂","🙃"],["🐶","🐱"],["🌕","🌑"],["▲","▽"],["🍏","🍎"],["⏰","⌚"],["✊","✋"],["🔒","🔓"],["🐦","🦉"],["😺","😸"],["🌸","💮"],["◼️","◻️"]];
+ const target=6+Math.floor(lvl*0.8);
+ function round(){
+  if(!alive)return;
+  const size=Math.min(6,3+Math.floor(lvl/3));
+  const n=size*size;
+  const [a,b]=PAIRS[ri(0,PAIRS.length-1)];
+  const oddIdx=ri(0,n-1);
+  const cellPx=Math.floor(Math.min(320,window.innerWidth-70)/size)-6;
+  const grid=h(`<div class="grid" style="grid-template-columns:repeat(${size},${cellPx}px)"></div>`);
+  for(let i=0;i<n;i++){
+   const c=h(`<div class="cell" style="height:${cellPx}px;display:flex;align-items:center;justify-content:center;font-size:${Math.floor(cellPx*0.55)}px">${i===oddIdx?b:a}</div>`);
+   c.onclick=()=>{
+    if(!alive)return;
+    if(i===oddIdx){solved++;api.ok();api.info("✓"+solved);round();}
+    else{errs++;api.no();c.classList.add("no");}
+   };
+   grid.appendChild(c);
+  }
+  api.area.innerHTML="";api.area.appendChild(grid);
+ }
+ round();
+ api.countdown(45,()=>{if(alive)api.end(Math.max(0,Math.min(100,(solved-0.5*errs)/target*100)),"✓"+solved)});
+ return ()=>{alive=false;};
+}});
+
+/* ---- 10. Matematik Sprint ---- */
+addI18n({
+tr:{g_math:"Matematik Sprint",g_math_d:"60 saniyede hızlı işlem",g_math_i:"İşlemleri olabildiğince hızlı ve doğru çöz. Yanlış cevaplar puan düşürür. 60 saniye."},
+en:{g_math:"Math Sprint",g_math_d:"Rapid mental arithmetic",g_math_i:"Solve as many problems as you can, fast and accurately. Wrong answers cost points. 60 seconds."}
+});
+registerGame({id:"math",cat:"math",icon:"🧮",
+start(api){
+ let alive=true,correct=0,wrong=0;
+ const lvl=api.level;
+ const target=10+lvl*2;
+ function gen(){
+  const ops=lvl<=2?["+","-"]:lvl<=5?["+","-","×"]:["+","-","×","÷"];
+  const op=ops[ri(0,ops.length-1)];
+  const M=6+lvl*4;
+  let a,b,ans;
+  if(op==="+"){a=ri(2,M*2);b=ri(2,M*2);ans=a+b;}
+  else if(op==="-"){a=ri(5,M*2);b=ri(2,a-1);ans=a-b;}
+  else if(op==="×"){a=ri(2,Math.max(4,Math.floor(M/2)));b=ri(2,9+Math.floor(lvl/2));ans=a*b;}
+  else{b=ri(2,9);ans=ri(2,Math.max(3,Math.floor(M/2)));a=b*ans;}
+  return[a+" "+op+" "+b,ans];
+ }
+ function question(){
+  if(!alive)return;
+  const [q,ans]=gen();
+  const opts=new Set([ans]);
+  while(opts.size<4){const d=ans+shuffle([-10,-3,-2,-1,1,2,3,10,ri(4,9),-ri(4,9)])[0];if(d>=0)opts.add(d);}
+  api.area.innerHTML="";
+  api.area.appendChild(h(`<div class="bigtxt">${q} = ?</div>`));
+  const box=h(`<div class="anschoices"></div>`);
+  shuffle([...opts]).forEach(o=>{
+   const btn=h(`<button>${o}</button>`);
+   btn.onclick=()=>{
+    if(!alive)return;
+    if(o===ans){correct++;api.ok();}else{wrong++;api.no();}
+    api.info("✓"+correct+" ✗"+wrong);
+    question();
+   };
+   box.appendChild(btn);
+  });
+  api.area.appendChild(box);
+ }
+ question();
+ api.countdown(60,()=>{if(alive)api.end(Math.min(100,Math.max(0,(correct-0.5*wrong)/target*100)),"✓"+correct)});
+ return ()=>{alive=false;};
+}});
+
+/* ---- 11. Matris Bulmaca / Matrix Puzzle ---- */
+addI18n({
+tr:{g_matrix:"Matris Bulmaca",g_matrix_d:"Eksik hücreyi mantıkla bul",g_matrix_i:"3×3 tablodaki kuralı çöz ve eksik hücreye geleni 4 seçenekten bul. 6 soru, 90 saniye."},
+en:{g_matrix:"Matrix Puzzle",g_matrix_d:"Deduce the missing cell",g_matrix_i:"Crack the rule of the 3×3 grid and pick what belongs in the missing cell. 6 questions, 90 seconds."}
+});
+registerGame({id:"matrix",cat:"logic",icon:"🧩",
+start(api){
+ let alive=true,qn=0,correct=0;
+ const lvl=api.level;
+ const SETS=[["🔴","🔵","🟡"],["▲","■","●"],["🌙","⭐","☀️"],["🍎","🍋","🍇"],["♠","♥","♦"],["🐟","🐦","🐢"]];
+ function genPuzzle(){
+  const sy=shuffle([...SETS[ri(0,SETS.length-1)]]);
+  const type=lvl<=3?1:ri(1,2);
+  const grid=[];
+  if(type===1){ // Latin square: her satır/sütunda her sembol bir kez
+   const shift=ri(1,2);
+   for(let r=0;r<3;r++)for(let c=0;c<3;c++)grid.push(sy[(r*shift+c)%3]);
+   const ans=grid[8];
+   return[grid,ans,sy.filter(x=>x!==ans)];
+  }else{ // sayı ilerlemesi: satır sembolü sabit, adet 1-2-3 (veya sütun bazlı)
+   const byRow=Math.random()<0.5;
+   for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+    const s=byRow?sy[r]:sy[c];
+    const n=(byRow?c:r)+1;
+    grid.push(s.repeat(n));
+   }
+   const ans=grid[8];
+   const d1=grid[8][0].repeat(2),d2=grid[8][0].repeat(1);
+   const other=sy.find(x=>x!==grid[8][0]);
+   return[grid,ans,[d1,d2,other.repeat(3)].filter(x=>x!==ans).slice(0,3)];
+  }
+ }
+ function question(){
+  if(!alive)return;
+  qn++;api.info(qn+"/6");
+  const [grid,ans,distr]=genPuzzle();
+  const cellPx=Math.floor(Math.min(300,window.innerWidth-90)/3);
+  const g=h(`<div class="grid" style="grid-template-columns:repeat(3,${cellPx}px)"></div>`);
+  grid.forEach((s,i)=>{
+   g.appendChild(h(`<div class="cell" style="height:${cellPx}px;display:flex;align-items:center;justify-content:center;font-size:${s.length>2?15:s.length>1?19:Math.floor(cellPx*0.44)}px;cursor:default;${i===8?"border:2px dashed var(--logic);background:transparent":""}">${i===8?'<span style="color:var(--logic);font-size:30px;font-weight:800">?</span>':s}</div>`));
+  });
+  api.area.innerHTML="";api.area.appendChild(g);
+  const box=h(`<div class="anschoices"></div>`);
+  shuffle([ans,...distr]).forEach(o=>{
+   const b=h(`<button style="font-size:${o.length>2?16:22}px">${o}</button>`);
+   b.onclick=()=>{
+    if(!alive)return;
+    if(o===ans){correct++;api.ok();}else api.no();
+    qn<6?question():(api.stopCountdown(),api.end(correct/6*100,"✓"+correct+"/6"));
+   };
+   box.appendChild(b);
+  });
+  api.area.appendChild(box);
+ }
+ question();
+ api.countdown(90,()=>{if(alive)api.end(correct/6*100,"✓"+correct+"/6")});
+ return ()=>{alive=false;};
+}});
+
+/* __GAMES_END__ */
+
+/* ================= boot ================= */
+render();
+if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
+ navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
