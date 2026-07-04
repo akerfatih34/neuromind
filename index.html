@@ -231,6 +231,21 @@ function loadState(){
  let raw={};
  try{raw=JSON.parse(localStorage.getItem("nm_p_"+PROFILES.active)||"{}")||{};}catch(e){}
  S=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),raw);
+ normalizeState();
+}
+// Firebase RTDB boş dizileri siler, dizileri bazen objeye çevirir — veriyi onar
+function toArr(v){return Array.isArray(v)?v:(v&&typeof v==="object"?Object.values(v):[]);}
+function normalizeState(){
+ S.history=toArr(S.history);S.snapshots=toArr(S.snapshots);S.badges=toArr(S.badges);
+ ["bpi","levels","best","fb"].forEach(k=>{if(!S[k]||typeof S[k]!=="object"||Array.isArray(S[k]))S[k]={};});
+ if(S.daily){
+  S.daily.games=toArr(S.daily.games).filter(id=>typeof id==="string");
+  S.daily.done=toArr(S.daily.done);
+  if(!S.daily.date||!S.daily.games.length)S.daily=null;
+ }
+ if(typeof S.streak!=="number")S.streak=0;
+ if(typeof S.totalGames!=="number")S.totalGames=0;
+ if(typeof S.relax!=="number")S.relax=0;
 }
 let META={lastChange:0},applying=false,pushTimer=null;
 try{META=Object.assign(META,JSON.parse(localStorage.getItem("nm_meta")||"{}"));}catch(e){}
@@ -632,6 +647,7 @@ function applyBackup(data){
  if(!data||data.app!=="neuromind"||!data.profiles||!data.states)return false;
  applying=true;
  try{
+  if(data.profiles.list&&!Array.isArray(data.profiles.list))data.profiles.list=Object.values(data.profiles.list);
   PROFILES=data.profiles;saveProfiles();
   Object.keys(data.states).forEach(id=>{try{localStorage.setItem("nm_p_"+id,JSON.stringify(data.states[id]));}catch(e){}});
   loadProfiles();loadState();
@@ -911,7 +927,7 @@ const BADGES=[
  {id:"b400",icon:"🧠",check:s=>overallBPI()>=400},
  {id:"b700",icon:"💎",check:s=>overallBPI()>=700},
  {id:"allcat",icon:"🌈",check:s=>Object.keys(CATS).every(c=>(s.bpi[c]||0)>0)},
- {id:"daily1",icon:"🗓️",check:s=>s.daily&&s.daily.done.length>=s.daily.games.length&&s.daily.games.length>0},
+ {id:"daily1",icon:"🗓️",check:s=>!!(s.daily&&s.daily.done&&s.daily.games&&s.daily.done.length>=s.daily.games.length&&s.daily.games.length>0)},
  {id:"perfect",icon:"🌟",check:s=>s.history.some(x=>x.s>=100)},
  {id:"lvl5",icon:"📈",check:s=>Object.values(s.levels).some(l=>l>=5)},
  {id:"lvl10",icon:"👑",check:s=>Object.values(s.levels).some(l=>l>=10)},
@@ -924,7 +940,9 @@ en:{badge_first:"First Step",badge_first_d:"Play your first game",badge_g10:"War
 });
 function checkBadges(){
  BADGES.forEach(b=>{
-  if(!S.badges.includes(b.id)&&b.check(S)){S.badges.push(b.id);save();toast(b.icon+" "+t("newBadge")+": "+t("badge_"+b.id));}
+  try{
+   if(!S.badges.includes(b.id)&&b.check(S)){S.badges.push(b.id);save();toast(b.icon+" "+t("newBadge")+": "+t("badge_"+b.id));}
+  }catch(e){}
  });
 }
 function renderBadges(){
