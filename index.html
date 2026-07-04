@@ -232,7 +232,13 @@ function loadState(){
  try{raw=JSON.parse(localStorage.getItem("nm_p_"+PROFILES.active)||"{}")||{};}catch(e){}
  S=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),raw);
 }
-function save(){try{localStorage.setItem("nm_p_"+PROFILES.active,JSON.stringify(S));}catch(e){}}
+let META={lastChange:0},applying=false,pushTimer=null;
+try{META=Object.assign(META,JSON.parse(localStorage.getItem("nm_meta")||"{}"));}catch(e){}
+function touchMeta(ts){META.lastChange=ts||Date.now();try{localStorage.setItem("nm_meta",JSON.stringify(META));}catch(e){}}
+function save(){
+ try{localStorage.setItem("nm_p_"+PROFILES.active,JSON.stringify(S));}catch(e){}
+ if(!applying){touchMeta();autoPushSoon();}
+}
 loadProfiles();loadState();
 function activeProfile(){return PROFILES.list.find(p=>p.id===PROFILES.active);}
 function switchProfile(id){
@@ -603,12 +609,14 @@ tr:{prof_title:"Profiller",prof_new:"➕ Yeni Profil",prof_name_prompt:"Profil a
  backup_title:"Yedekleme",backup_desc:"Tüm profilleri dosya olarak indir; başka cihazda içe aktar.",backup_dl:"💾 Yedeği İndir",backup_ul:"📂 Yedek Yükle",backup_done:"Yedek yüklendi ✓",backup_bad:"Geçersiz yedek dosyası",backup_confirm:"Mevcut tüm veriler yedektekilerle DEĞİŞTİRİLECEK. Devam?",
  sync_title:"Bulut Sync (Firebase)",sync_desc:"İsteğe bağlı: cihazlar arası eşitleme. Kendi ücretsiz Firebase veritabanı adresini gir.",sync_url:"Firebase veritabanı adresi (https://...firebasedatabase.app)",sync_code:"Sync kodu (gizli anahtarın)",sync_gen:"🎲 Üret",sync_push:"☁️ Buluta Gönder",sync_pull:"⬇️ Buluttan Al",sync_pushing:"Gönderiliyor...",sync_pulling:"Alınıyor...",sync_ok_push:"Buluta kaydedildi ✓",sync_ok_pull:"Buluttan yüklendi ✓",sync_err:"Bağlantı hatası — adresi ve kuralları kontrol et",sync_empty:"Bulutta veri bulunamadı",sync_conf:"Buluttaki veri mevcut verilerin yerine geçecek. Devam?",sync_need:"Önce adres ve sync kodu gir",
  sync_help:"Firebase kurulumu (bir kez, ~3 dk)",
+ sync_auto:"Otomatik senkronizasyon (oyunlardan sonra gönder, açılışta al)",sync_auto_pulled:"Buluttan güncellendi ✓",sync_auto_done:"Otomatik kaydedildi ☁️",
  g_title:"Google ile Giriş (önerilen)",g_desc:"Google hesabınla gir; verilerin buluta yalnızca senin erişebildiğin alanda kaydedilir.",g_cfg_ph:"firebaseConfig'i buraya yapıştır → { apiKey: \"...\", authDomain: \"...\", databaseURL: \"...\", ... }",g_login:"🔑 Google ile Giriş Yap",g_logout:"Çıkış",g_signedin:"Giriş yapıldı:",g_need_login:"Önce Google ile giriş yap",g_need_db:"databaseURL bulunamadı — firebaseConfig'e ekle",g_need_cfg:"Önce firebaseConfig yapıştır",g_file_warn:"Google girişi https adres gerektirir — uygulamayı GitHub Pages adresinden aç",g_ok:"Giriş başarılı ✓",g_bye:"Çıkış yapıldı",alt_title:"Alternatif: sync kodu ile (hesapsız)",g_help:"Google giriş kurulumu (bir kez, ~5 dk)"},
 en:{prof_title:"Profiles",prof_new:"➕ New Profile",prof_name_prompt:"Profile name:",prof_delete_confirm:"Delete this profile and all its progress?",prof_stats:"games",
  fb_q:"How was the difficulty?",fb_easy:"Too easy",fb_ok:"Just right",fb_hard:"Too hard",fb_thanks:"Thanks!",fb_up:"Level increased →",fb_down:"Level decreased →",
  backup_title:"Backup",backup_desc:"Download all profiles as a file; import on another device.",backup_dl:"💾 Download Backup",backup_ul:"📂 Load Backup",backup_done:"Backup loaded ✓",backup_bad:"Invalid backup file",backup_confirm:"ALL current data will be REPLACED by the backup. Continue?",
  sync_title:"Cloud Sync (Firebase)",sync_desc:"Optional: sync across devices. Enter your own free Firebase database URL.",sync_url:"Firebase database URL (https://...firebasedatabase.app)",sync_code:"Sync code (your secret key)",sync_gen:"🎲 Generate",sync_push:"☁️ Push to Cloud",sync_pull:"⬇️ Pull from Cloud",sync_pushing:"Pushing...",sync_pulling:"Pulling...",sync_ok_push:"Saved to cloud ✓",sync_ok_pull:"Loaded from cloud ✓",sync_err:"Connection error — check URL and rules",sync_empty:"No data found in cloud",sync_conf:"Cloud data will replace current data. Continue?",sync_need:"Enter URL and sync code first",
  sync_help:"Firebase setup (once, ~3 min)",
+ sync_auto:"Auto sync (push after games, pull on launch)",sync_auto_pulled:"Updated from cloud ✓",sync_auto_done:"Auto-saved ☁️",
  g_title:"Sign in with Google (recommended)",g_desc:"Sign in with your Google account; your data is stored in the cloud in a space only you can access.",g_cfg_ph:"Paste your firebaseConfig here → { apiKey: \"...\", authDomain: \"...\", databaseURL: \"...\", ... }",g_login:"🔑 Sign in with Google",g_logout:"Sign out",g_signedin:"Signed in:",g_need_login:"Sign in with Google first",g_need_db:"databaseURL missing — add it to firebaseConfig",g_need_cfg:"Paste firebaseConfig first",g_file_warn:"Google sign-in requires an https URL — open the app from its GitHub Pages address",g_ok:"Signed in ✓",g_bye:"Signed out",alt_title:"Alternative: sync code (no account)",g_help:"Google sign-in setup (once, ~5 min)"}
 });
 let SYNC={url:"",code:""};
@@ -622,9 +630,13 @@ function collectAll(){
 }
 function applyBackup(data){
  if(!data||data.app!=="neuromind"||!data.profiles||!data.states)return false;
- PROFILES=data.profiles;saveProfiles();
- Object.keys(data.states).forEach(id=>{try{localStorage.setItem("nm_p_"+id,JSON.stringify(data.states[id]));}catch(e){}});
- loadProfiles();loadState();
+ applying=true;
+ try{
+  PROFILES=data.profiles;saveProfiles();
+  Object.keys(data.states).forEach(id=>{try{localStorage.setItem("nm_p_"+id,JSON.stringify(data.states[id]));}catch(e){}});
+  loadProfiles();loadState();
+  touchMeta(data.exported||Date.now());
+ }finally{applying=false;}
  return true;
 }
 function downloadBackup(){
@@ -722,8 +734,47 @@ async function gEnsure(){
  if(!cfg)throw new Error("cfg");
  await loadFirebase();
  if(!firebase.apps.length)firebase.initializeApp(cfg);
- if(!gWatched){gWatched=true;firebase.auth().onAuthStateChanged(u=>{gUser=u;if(screen==="profile")renderProfile();});}
+ if(!gWatched){gWatched=true;firebase.auth().onAuthStateChanged(u=>{gUser=u;if(u)autoSyncCheck();if(screen==="profile")renderProfile();});}
  return cfg;
+}
+async function gEndpoint(){
+ const cfg=await gEnsure();
+ if(!gUser)return null;
+ const base=(cfg.databaseURL||SYNC.url||"").trim().replace(/\/+$/,"");
+ if(!base)return null;
+ const tok=await gUser.getIdToken();
+ return base+"/users/"+gUser.uid+"/neuromind.json?auth="+encodeURIComponent(tok);
+}
+function autoPushSoon(){
+ if(applying||SYNC.auto===false||!SYNC.gOn||!gUser)return;
+ clearTimeout(pushTimer);
+ pushTimer=setTimeout(autoPushNow,4000);
+}
+async function autoPushNow(){
+ if(applying||SYNC.auto===false||!gUser)return;
+ try{
+  const ep=await gEndpoint();if(!ep)return;
+  const payload=collectAll();
+  const res=await fetch(ep,{method:"PUT",body:JSON.stringify(payload)});
+  if(res.ok){
+   touchMeta(payload.exported);
+   const st=$("#syncstatus2");if(st)st.textContent=t("sync_auto_done")+" "+new Date().toLocaleTimeString().slice(0,5);
+  }
+ }catch(e){}
+}
+async function autoSyncCheck(){
+ if(SYNC.auto===false)return;
+ try{
+  const ep=await gEndpoint();if(!ep)return;
+  const res=await fetch(ep);if(!res.ok)return;
+  const data=await res.json();
+  if(!data){autoPushSoon();return;}
+  if((data.exported||0)>(META.lastChange||0)+1000){
+   if(applyBackup(data)){toast(t("sync_auto_pulled"));render();}
+  }else if((META.lastChange||0)>(data.exported||0)+1000){
+   autoPushSoon();
+  }
+ }catch(e){}
 }
 async function googleLogin(){
  readGCfg();
@@ -809,7 +860,10 @@ function renderProfile(){
     <button class="btn small" onclick="gSync('push')">${t("sync_push")}</button>
     <button class="btn ghost small" onclick="gSync('pull')">${t("sync_pull")}</button>
     <button class="btn ghost small" onclick="googleLogout()">${t("g_logout")}</button>
-   </div>`
+   </div>
+   <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted);cursor:pointer">
+    <input type="checkbox" ${SYNC.auto===false?"":"checked"} onchange="SYNC.auto=this.checked;saveSync();if(this.checked)autoPushSoon()"> ${t("sync_auto")}
+   </label>`
   :`
    <textarea class="syncin" id="gcfg" rows="3" placeholder='${t("g_cfg_ph")}'>${SYNC.cfg||""}</textarea>
    <button class="btn small" onclick="googleLogin()">${t("g_login")}</button>`}
@@ -1357,6 +1411,8 @@ render();
 if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
  navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
+// oturum varsa geri yükle → autoSyncCheck tetiklenir (onAuthStateChanged içinden)
+if(SYNC.gOn&&SYNC.cfg&&location.protocol.indexOf("http")===0){gEnsure().catch(()=>{});}
 </script>
 </body>
 </html>
