@@ -22,7 +22,10 @@ GitHub Pages bunu ücretsiz sağlar.
 ### GitHub Pages'i aç
 6. GitHub Desktop'ta **Repository → View on GitHub** → sitede **Settings → Pages** →
    Source: **Deploy from a branch** → Branch: **main**, klasör: **/ (root)** → Save.
-7. 1-2 dk sonra adresin hazır: `https://KULLANICIADIN.github.io/neuromind/`
+7. ⚠️ **Custom domain kutusunu BOŞ bırak** — orası kendi alan adı satın alanlar içindir;
+   repo adı yazılırsa "not properly formatted" hatası verir.
+8. 1-2 dk sonra sayfanın üstünde "Your site is live at ..." görünür:
+   `https://KULLANICIADIN.github.io/neuromind/`
 
 ### Güncelleme yayınlama
 Yeni `index.html`'i repo klasörüne kopyala → GitHub Desktop'ta commit mesajı yaz →
