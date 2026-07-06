@@ -1,4 +1,4 @@
-const CACHE = "neuromind-v5";
+const CACHE = "neuromind-v6";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));

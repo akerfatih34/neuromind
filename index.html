@@ -301,20 +301,21 @@ const gameList = ()=>Object.values(GAMES);
 
 /* ================= navigation ================= */
 let screen="home";
-const NAVS=[["home","🏠","nav_home"],["games","🎮","nav_games"],["relax","🧘","nav_relax"],["stats","📊","nav_stats"],["badges","🏅","nav_badges"]];
+const NAVS=[["home","🏠","nav_home"],["games","🎮","nav_games"],["iq","🧠","nav_iq"],["relax","🧘","nav_relax"],["stats","📊","nav_stats"],["badges","🏅","nav_badges"]];
 function renderNav(){
  $("#nav").innerHTML=NAVS.map(([id,ic,k])=>`<button class="${screen===id?'on':''}" onclick="go('${id}')"><span class="ic">${ic}</span>${t(k)}</button>`).join("");
 }
 function go(s){screen=s;render();}
 function toggleLang(){S.lang=S.lang==="tr"?"en":"tr";save();render();}
 function render(){
- stopRelax();
+ stopRelax();iqStop();
  $("#langbtn").textContent=S.lang==="tr"?"EN":"TR";
  const ap=activeProfile();
  $("#profbtn").textContent=ap.emoji+" "+ap.name;
  renderNav();
  if(screen==="home")renderHome();
  else if(screen==="games")renderGames();
+ else if(screen==="iq")renderIQ();
  else if(screen==="relax")renderRelax();
  else if(screen==="stats")renderStats();
  else if(screen==="profile")renderProfile();
@@ -1787,6 +1788,131 @@ start(api){
  api.countdown(90,()=>{if(alive)api.end(18,"⏱");});
  return ()=>{alive=false;timers.forEach(clearTimeout);};
 }});
+
+/* ================= Bilişsel Test / Cognitive (IQ) Test ================= */
+addI18n({
+tr:{nav_iq:"Test",iq_title:"Bilişsel Test",iq_sub:"Kısa bir bilişsel değerlendirme (~5 dk): akıl yürütme, hafıza ve görsel-uzamsal beceri. 12 soru, hemen cevapla.",iq_start:"Teste Başla",iq_q:"Soru",iq_result_t:"Bilişsel Skor",iq_est:"Bu tahmini bir skordur; klinik bir IQ ölçümü değildir.",iq_reasoning:"Akıl Yürütme",iq_memory:"Hafıza",iq_spatial:"Görsel-Uzamsal",iq_best:"En iyi skor",iq_retake:"Tekrar Test Ol",iq_same:"Aynı ↻",iq_mirror:"Ayna ⇄",iq_recall:"Gördüğün sayıyı yaz",iq_odd:"Kurala UYMAYAN sayıya dokun",iq_ok:"Tamam",iq_mem:"Ezberle...",iq_tiles:"Yanan kareleri hatırla, sonra onlara dokun"},
+en:{nav_iq:"Test",iq_title:"Cognitive Test",iq_sub:"A short cognitive assessment (~5 min): reasoning, memory and visual-spatial skill. 12 quick questions.",iq_start:"Start Test",iq_q:"Question",iq_result_t:"Cognitive Score",iq_est:"This is an estimate, not a clinical IQ measurement.",iq_reasoning:"Reasoning",iq_memory:"Memory",iq_spatial:"Visual-Spatial",iq_best:"Best score",iq_retake:"Retake Test",iq_same:"Same ↻",iq_mirror:"Mirror ⇄",iq_recall:"Type the number you saw",iq_odd:"Tap the number that does NOT fit",iq_ok:"OK",iq_mem:"Memorize...",iq_tiles:"Memorize the lit tiles, then tap them"}
+});
+let IQ={phase:"intro",qi:0,qs:[],res:[]},iqT=[];
+function iqStop(){iqT.forEach(clearTimeout);iqT=[];}
+function iqLater(fn,ms){iqT.push(setTimeout(fn,ms));}
+function iqShape(P){const cells=[[0,0]],set=new Set(["0,0"]);while(cells.length<P){const b=cells[ri(0,cells.length-1)];for(const d of shuffle([[1,0],[-1,0],[0,1],[0,-1]])){const nx=b[0]+d[0],ny=b[1]+d[1],k=nx+","+ny;if(!set.has(k)){set.add(k);cells.push([nx,ny]);break;}}}return cells;}
+const iqRot=c=>c.map(([x,y])=>[y,-x]),iqMir=c=>c.map(([x,y])=>[-x,y]);
+function iqNorm(c){const mx=Math.min(...c.map(p=>p[0])),my=Math.min(...c.map(p=>p[1]));return c.map(([x,y])=>[x-mx,y-my]);}
+function iqSVG(c){c=iqNorm(c);const w=Math.max(...c.map(p=>p[0]))+1,hh=Math.max(...c.map(p=>p[1]))+1,u=Math.floor(90/Math.max(w,hh,3));let r="";c.forEach(([x,y])=>r+=`<rect x="${x*u}" y="${y*u}" width="${u-2}" height="${u-2}" rx="3" fill="var(--memory)"/>`);return `<svg width="${w*u}" height="${hh*u}" viewBox="0 0 ${w*u} ${hh*u}">${r}</svg>`;}
+function iqChoiceQ(domain,prompt,choices,correctIdx){
+ return {domain,render(host,done){
+  host.innerHTML=`<div style="font-size:28px;font-weight:800;text-align:center;margin:6px 0;min-height:44px">${prompt}</div>`;
+  const box=h(`<div class="anschoices"></div>`);
+  choices.forEach((ch,i)=>{const b=h(`<button>${ch}</button>`);b.onclick=()=>{if(box.dataset.d)return;box.dataset.d=1;b.style.borderColor=i===correctIdx?"var(--good)":"var(--bad)";iqLater(()=>done(i===correctIdx?1:0),320);};box.appendChild(b);});
+  host.appendChild(box);
+ }};
+}
+function iqQseq(){
+ const s=ri(1,9),d=ri(2,6),ans=s+4*d,terms=[s,s+d,s+2*d,s+3*d];
+ const set=new Set([ans]),opts=[ans];while(opts.length<4){const c=ans+ri(-3,3)*d+ri(-1,1);if(c>0&&!set.has(c)){set.add(c);opts.push(c);}}
+ const sh=shuffle(opts.map(v=>({v,c:v===ans})));
+ return iqChoiceQ("reasoning",`${terms.join(", ")}, ?`,sh.map(o=>o.v),sh.findIndex(o=>o.c));
+}
+function iqQodd(){
+ const m=ri(2,5),good=[];while(good.length<3){const v=m*ri(2,9);if(!good.includes(v))good.push(v);}
+ let bad;do{bad=ri(6,45);}while(bad%m===0);
+ const arr=shuffle(good.concat([bad]));
+ return iqChoiceQ("reasoning",t("iq_odd"),arr,arr.indexOf(bad));
+}
+function iqQana(){
+ const a=ri(2,6),m=ri(2,4),b=a*m,c=ri(3,7),ans=c*m;
+ const set=new Set([ans]),opts=[ans];while(opts.length<4){const cc=ans+ri(-4,4);if(cc>0&&!set.has(cc)){set.add(cc);opts.push(cc);}}
+ const sh=shuffle(opts.map(v=>({v,c:v===ans})));
+ return iqChoiceQ("reasoning",`${a} → ${b} , ${c} → ?`,sh.map(o=>o.v),sh.findIndex(o=>o.c));
+}
+function iqQrot(){
+ const base=iqShape(ri(4,6)),isMir=Math.random()<0.5;let cand=isMir?iqMir(base):base.map(c=>c.slice());const r=ri(0,3);for(let i=0;i<r;i++)cand=iqRot(cand);
+ return {domain:"spatial",render(host,done){
+  host.innerHTML=`<div style="display:flex;gap:14px;align-items:center;justify-content:center;min-height:120px"><div>${iqSVG(base)}</div><div style="color:var(--muted);font-size:22px">→</div><div>${iqSVG(cand)}</div></div>`;
+  const box=h(`<div class="anschoices"></div>`),bS=h(`<button>${t("iq_same")}</button>`),bM=h(`<button>${t("iq_mirror")}</button>`);
+  const pick=g=>{if(box.dataset.d)return;box.dataset.d=1;iqLater(()=>done(g===isMir?1:0),240);};
+  bS.onclick=()=>pick(false);bM.onclick=()=>pick(true);box.appendChild(bS);box.appendChild(bM);host.appendChild(box);
+ }};
+}
+function iqQdigit(len){
+ let num="";for(let i=0;i<len;i++)num+=(i===0?ri(1,9):ri(0,9));
+ return {domain:"memory",render(host,done){
+  host.innerHTML=`<div style="text-align:center;color:var(--muted);margin-bottom:8px">${t("iq_mem")}</div><div class="bigtxt" style="letter-spacing:6px">${num}</div>`;
+  iqLater(()=>{
+   host.innerHTML=`<div style="text-align:center;color:var(--muted);margin-bottom:10px">${t("iq_recall")}</div>`;
+   const inp=h(`<input class="numin" inputmode="numeric" maxlength="${len+2}">`),ok=h(`<button class="btn" style="margin-top:16px">${t("iq_ok")}</button>`);
+   host.appendChild(inp);host.appendChild(ok);inp.focus();
+   const sub=()=>{if(ok.dataset.d)return;ok.dataset.d=1;const v=(inp.value||"").trim();let c=0;for(let i=0;i<len;i++)if(v[i]===num[i])c++;done(c/len);};
+   ok.onclick=sub;inp.onkeydown=e=>{if(e.key==="Enter")sub();};
+  },700+len*450);
+ }};
+}
+function iqQtiles(){
+ const size=4,k=4,targets=shuffle([...Array(size*size).keys()]).slice(0,k);
+ return {domain:"memory",render(host,done){
+  const cellPx=Math.floor(Math.min(240,window.innerWidth-90)/size);
+  host.innerHTML=`<div style="text-align:center;color:var(--muted);margin-bottom:10px">${t("iq_tiles")}</div>`;
+  const grid=h(`<div class="grid" style="grid-template-columns:repeat(${size},${cellPx}px);justify-content:center"></div>`),cells=[];
+  for(let i=0;i<size*size;i++){const c=h(`<div class="cell" style="height:${cellPx}px"></div>`);cells.push(c);grid.appendChild(c);}
+  host.appendChild(grid);
+  iqLater(()=>targets.forEach(i=>cells[i].classList.add("lit")),300);
+  iqLater(()=>{
+   cells.forEach(c=>c.classList.remove("lit"));
+   let picks=0,hits=0;
+   cells.forEach((c,i)=>c.onclick=()=>{if(c.dataset.d||picks>=k)return;c.dataset.d=1;picks++;if(targets.indexOf(i)>=0){c.classList.add("ok");hits++;}else c.classList.add("no");if(picks>=k)iqLater(()=>done(hits/k),400);});
+  },1900);
+ }};
+}
+function iqBuild(){
+ const qs=[iqQseq(),iqQseq(),iqQodd(),iqQodd(),iqQana(),iqQana(),iqQrot(),iqQrot(),iqQrot(),iqQdigit(5),iqQdigit(6),iqQtiles()];
+ return shuffle(qs);
+}
+function iqAnswer(correct,domain){
+ IQ.res.push({correct,domain});IQ.qi++;
+ if(IQ.qi>=IQ.qs.length)iqFinish();
+ renderIQ();
+}
+function iqFinish(){
+ const byDom={reasoning:[],memory:[],spatial:[]};
+ IQ.res.forEach(r=>byDom[r.domain].push(r.correct));
+ const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+ const toScore=r=>Math.round(70+r*60);
+ IQ.phase="result";
+ IQ.score=toScore(avg(IQ.res.map(r=>r.correct)));
+ IQ.dom={reasoning:toScore(avg(byDom.reasoning)),memory:toScore(avg(byDom.memory)),spatial:toScore(avg(byDom.spatial))};
+ if(!S.iq||IQ.score>S.iq.score){S.iq={score:IQ.score,dom:IQ.dom,date:Date.now()};save();}
+}
+function renderIQ(){
+ iqStop();
+ const m=$("#main");
+ if(IQ.phase==="intro"){
+  m.innerHTML=`<h2 class="sect">🧠 ${t("iq_title")}</h2>
+   <div class="card"><p style="color:var(--muted);line-height:1.55">${t("iq_sub")}</p>
+   ${S.iq?`<div style="margin-top:12px;font-weight:700">${t("iq_best")}: <span style="color:var(--memory);font-size:22px">${S.iq.score}</span></div>`:""}
+   <button class="btn" id="iqgo" style="margin-top:16px">${t("iq_start")}</button></div>`;
+  $("#iqgo").onclick=()=>{IQ={phase:"run",qi:0,qs:iqBuild(),res:[]};renderIQ();};
+  return;
+ }
+ if(IQ.phase==="run"){
+  const q=IQ.qs[IQ.qi];
+  m.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin:4px 2px 14px"><b>${t("iq_q")} ${IQ.qi+1}/${IQ.qs.length}</b><span style="color:var(--muted)">${t("iq_"+q.domain)}</span></div>
+   <div style="height:6px;background:var(--card2);border-radius:4px;margin:0 2px 14px"><div style="height:6px;width:${IQ.qi/IQ.qs.length*100}%;background:var(--memory);border-radius:4px;transition:width .2s"></div></div>
+   <div class="card" id="iqhost" style="min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center"></div>`;
+  q.render($("#iqhost"),correct=>iqAnswer(correct,q.domain));
+  return;
+ }
+ const bar=(lbl,v)=>`<div style="margin:10px 0 4px"><div style="display:flex;justify-content:space-between"><span>${lbl}</span><b>${v}</b></div><div style="height:8px;background:var(--card2);border-radius:5px;margin-top:5px"><div style="height:8px;width:${Math.max(0,Math.min(100,(v-70)/60*100))}%;background:var(--memory);border-radius:5px"></div></div></div>`;
+ m.innerHTML=`<h2 class="sect">🧠 ${t("iq_result_t")}</h2>
+  <div class="card" style="text-align:center">
+   <div style="font-size:66px;font-weight:900;color:var(--memory);line-height:1.1">${IQ.score}</div>
+   <div style="color:var(--muted);font-size:12.5px;margin-bottom:10px">${t("iq_est")}</div>
+   <div style="text-align:left">${bar(t("iq_reasoning"),IQ.dom.reasoning)}${bar(t("iq_memory"),IQ.dom.memory)}${bar(t("iq_spatial"),IQ.dom.spatial)}</div>
+   <button class="btn" id="iqre" style="margin-top:18px">${t("iq_retake")}</button>
+  </div>`;
+ $("#iqre").onclick=()=>{IQ={phase:"intro",qi:0,qs:[],res:[]};renderIQ();};
+}
 
 /* __GAMES_END__ */
 
