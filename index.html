@@ -1672,6 +1672,122 @@ start(api){
  return ()=>{alive=false;};
 }});
 
+/* ---- 17. Yol Hafızası / Path Memory ---- */
+addI18n({
+tr:{g_path:"Yol Hafızası",g_path_d:"Yolu sırayla hatırla",g_path_i:"Kareler bir yol boyunca sırayla yanar. Söndükten sonra AYNI sırayla o karelere dokun. 3 tur."},
+en:{g_path:"Path Memory",g_path_d:"Recall the path in order",g_path_i:"Tiles light up one by one along a path. After they fade, tap them in the SAME order. 3 rounds."}
+});
+registerGame({id:"path",cat:"memory",icon:"🧭",
+start(api){
+ let alive=true,timers=[],round=0,scoreSum=0;
+ function later(fn,ms){timers.push(setTimeout(fn,ms));}
+ const lvl=api.level;
+ const size=Math.min(6,3+Math.floor((lvl-1)/3));
+ const plen=Math.min(size*size-1,3+Math.ceil(lvl/2));
+ function genPath(){
+  const path=[ri(0,size*size-1)];const used=new Set(path);
+  while(path.length<plen){
+   const cur=path[path.length-1],r=Math.floor(cur/size),c=cur%size;
+   const nb=shuffle([[r-1,c],[r+1,c],[r,c-1],[r,c+1]].filter(([nr,nc])=>nr>=0&&nr<size&&nc>=0&&nc<size).map(([nr,nc])=>nr*size+nc).filter(i=>!used.has(i)));
+   if(!nb.length)break;
+   path.push(nb[0]);used.add(nb[0]);
+  }
+  return path;
+ }
+ function playRound(){
+  if(!alive)return;
+  round++;api.info(t("round")+" "+round+"/3");
+  const path=genPath();
+  const cellPx=Math.floor(Math.min(300,window.innerWidth-80)/size);
+  const cells=[];
+  const grid=h(`<div class="grid" style="grid-template-columns:repeat(${size},${cellPx}px)"></div>`);
+  for(let i=0;i<size*size;i++){const c=h(`<div class="cell" style="height:${cellPx}px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff"></div>`);cells.push(c);grid.appendChild(c);}
+  api.area.innerHTML="";api.area.appendChild(grid);
+  const step=Math.max(320,560-lvl*20);
+  path.forEach((idx,i)=>{later(()=>{if(alive)cells[idx].classList.add("lit");},400+i*step);});
+  const revealEnd=400+path.length*step+550;
+  later(()=>{
+   if(!alive)return;
+   cells.forEach(c=>c.classList.remove("lit"));
+   let expected=0,hits=0;
+   cells.forEach((c,i)=>c.onclick=()=>{
+    if(!alive||c.dataset.done||expected>=path.length)return;
+    c.dataset.done=1;
+    if(i===path[expected]){c.classList.add("ok");hits++;api.ok();}
+    else{c.classList.add("no");api.no();}
+    expected++;api.info(expected+"/"+path.length);
+    if(expected>=path.length){scoreSum+=hits/path.length*100;later(()=>{if(alive)(round<3?playRound():api.end(scoreSum/3,hits+"/"+path.length));},650);}
+   });
+  },revealEnd);
+ }
+ playRound();
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
+/* ---- 18. Blok Kaydırma / Sliding Blocks (Rush Hour) ---- */
+addI18n({
+tr:{g_slide:"Blok Kaydırma",g_slide_d:"Kırmızı aracı çıkışa götür",g_slide_i:"Kırmızı araç sağdaki çıkışa ulaşsın. Bir araca dokunup seç, sonra ok tuşlarıyla kaydır. Diğer araçlar yolu kapatır — onları da kaydır!"},
+en:{g_slide:"Sliding Blocks",g_slide_d:"Drive the red car out",g_slide_i:"Get the red car to the exit on the right. Tap a car to select it, then slide it with the arrow keys. Other cars block the way — move them too!"}
+});
+registerGame({id:"slide",cat:"logic",icon:"🚗",
+start(api){
+ let alive=true,moves=0,sel=0,timers=[];
+ function later(fn,ms){timers.push(setTimeout(fn,ms));}
+ const lvl=api.level,N=6,exitRow=2;
+ const nCars=Math.min(7,3+Math.floor(lvl/2));
+ const scramble=10+lvl*4;
+ let cars=[];
+ const inB=car=>car.r>=0&&car.c>=0&&(car.r+(car.dir==='v'?car.len-1:0))<N&&(car.c+(car.dir==='h'?car.len-1:0))<N;
+ const cellsOf=car=>{const a=[];for(let k=0;k<car.len;k++)a.push((car.r+(car.dir==='v'?k:0))*N+(car.c+(car.dir==='h'?k:0)));return a;};
+ function cellFree(r,c,except){if(r<0||r>=N||c<0||c>=N)return false;const key=r*N+c;for(let i=0;i<cars.length;i++){if(i===except)continue;if(cellsOf(cars[i]).indexOf(key)>=0)return false;}return true;}
+ function noOverlap(){const s=new Set();for(const car of cars)for(const k of cellsOf(car)){if(s.has(k))return false;s.add(k);}return true;}
+ function gen(){
+  for(let a=0;a<300;a++){
+   cars=[{r:exitRow,c:N-2,len:2,dir:'h',red:true}];
+   for(let i=0;i<nCars;i++)for(let tr=0;tr<40;tr++){const dir=Math.random()<0.5?'h':'v';const len=Math.random()<0.6?2:3;const car={r:ri(0,N-1),c:ri(0,N-1),len,dir,red:false};if(inB(car)){cars.push(car);if(noOverlap())break;cars.pop();}}
+   for(let s=0;s<scramble;s++){const idx=ri(0,cars.length-1),car=cars[idx];const st=Math.random()<0.5?-1:1;const lead=car.dir==='h'?{r:car.r,c:st>0?car.c+car.len:car.c-1}:{r:st>0?car.r+car.len:car.r-1,c:car.c};if(cellFree(lead.r,lead.c,idx)){if(car.dir==='h')car.c+=st;else car.r+=st;}}
+   if(cars[0].c+cars[0].len-1<N-1)return true;
+  }
+  return false;
+ }
+ if(!gen()){api.end(30,"—");return ()=>{alive=false;};}
+ const cellPx=Math.floor(Math.min(318,window.innerWidth-50)/N),gap=4;
+ const wrap=h(`<div></div>`);
+ const board=h(`<div style="position:relative;width:${N*cellPx}px;height:${N*cellPx}px;background:var(--card2);border:1px solid var(--line);border-radius:12px;margin:0 auto"></div>`);
+ board.appendChild(h(`<div style="position:absolute;right:-4px;top:${exitRow*cellPx+gap}px;width:7px;height:${cellPx-gap*2}px;background:var(--good);border-radius:3px"></div>`));
+ const ctrl=h(`<div style="display:flex;gap:10px;justify-content:center;margin-top:16px"></div>`);
+ const mkBtn=lbl=>h(`<button style="background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 16px;font-size:20px;font-weight:800;cursor:pointer;min-width:52px">${lbl}</button>`);
+ const bL=mkBtn("←"),bU=mkBtn("↑"),bD=mkBtn("↓"),bR=mkBtn("→");
+ [bL,bU,bD,bR].forEach(b=>ctrl.appendChild(b));
+ wrap.appendChild(board);wrap.appendChild(ctrl);
+ api.area.innerHTML="";api.area.appendChild(wrap);
+ const COL=["#ff5c5c","#38b6ff","#ffb020","#00c2a8","#b07cff","#ff8fab","#7cff9e","#f0c040"];
+ let els=[];
+ function render(){
+  els.forEach(e=>e.remove());els=[];
+  cars.forEach((car,i)=>{
+   const w=(car.dir==='h'?car.len:1)*cellPx-gap*2,ht=(car.dir==='v'?car.len:1)*cellPx-gap*2;
+   const e=h(`<div style="position:absolute;left:${car.c*cellPx+gap}px;top:${car.r*cellPx+gap}px;width:${w}px;height:${ht}px;border-radius:8px;background:${car.red?COL[0]:COL[(i%7)+1]};cursor:pointer;box-shadow:${sel===i?'0 0 0 3px #fff':'none'};transition:left .12s,top .12s"></div>`);
+   e.onclick=()=>{sel=i;render();};
+   board.appendChild(e);els.push(e);
+  });
+ }
+ function move(dr,dc){
+  if(!alive||sel===null||sel>=cars.length)return;
+  const car=cars[sel];
+  if(car.dir==='h'&&dc===0)return;
+  if(car.dir==='v'&&dr===0)return;
+  const lead=dc>0?{r:car.r,c:car.c+car.len}:dc<0?{r:car.r,c:car.c-1}:dr>0?{r:car.r+car.len,c:car.c}:{r:car.r-1,c:car.c};
+  if(!cellFree(lead.r,lead.c,sel))return;
+  car.r+=dr;car.c+=dc;moves++;api.info(moves+" ↔");render();
+  if(cars[0].c+cars[0].len-1>=N-1){api.stopCountdown();api.ok();later(()=>{if(alive)api.end(Math.max(45,100-moves*2),moves+" ↔");},350);}
+ }
+ bL.onclick=()=>move(0,-1);bR.onclick=()=>move(0,1);bU.onclick=()=>move(-1,0);bD.onclick=()=>move(1,0);
+ render();api.info("0 ↔");
+ api.countdown(90,()=>{if(alive)api.end(18,"⏱");});
+ return ()=>{alive=false;timers.forEach(clearTimeout);};
+}});
+
 /* __GAMES_END__ */
 
 /* ================= boot ================= */
