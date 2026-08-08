@@ -144,6 +144,9 @@ canvas.chart{width:100%;height:170px}
 details.helpbox{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:10px;font-size:13px;color:var(--muted)}
 details.helpbox summary{cursor:pointer;font-weight:700;color:var(--text)}
 details.helpbox ol{margin:10px 0 4px 18px;line-height:1.6}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 </style>
 </head>
 <body>
@@ -305,7 +308,7 @@ const gameList = ()=>Object.values(GAMES);
 let screen="home";
 const NAVS=[["home","🏠","nav_home"],["games","🎮","nav_games"],["iq","🧠","nav_iq"],["relax","🧘","nav_relax"],["stats","📊","nav_stats"],["badges","🏅","nav_badges"]];
 function renderNav(){
- $("#nav").innerHTML=NAVS.map(([id,ic,k])=>`<button class="${screen===id?'on':''}" onclick="go('${id}')"><span class="ic">${ic}</span>${t(k)}</button>`).join("");
+ $("#nav").innerHTML=NAVS.map(([id,ic,k])=>`<button class="${screen===id?'on':''}" onclick="go('${id}')" aria-label="${t(k)}" ${screen===id?'aria-current="page"':''}><span class="ic" aria-hidden="true">${ic}</span>${t(k)}</button>`).join("");
 }
 function go(s){screen=s;render();}
 function toggleLang(){S.lang=S.lang==="tr"?"en":"tr";save();render();}
@@ -955,11 +958,13 @@ const BADGES=[
  {id:"lvl5",icon:"📈",check:s=>Object.values(s.levels).some(l=>l>=5)},
  {id:"lvl10",icon:"👑",check:s=>Object.values(s.levels).some(l=>l>=10)},
  {id:"zen",icon:"🧘",check:s=>(s.relax||0)>=1},
- {id:"zen10",icon:"🌿",check:s=>(s.relax||0)>=10}
+ {id:"zen10",icon:"🌿",check:s=>(s.relax||0)>=10},
+ {id:"iq1",icon:"🎓",check:s=>!!(s.iq&&s.iq.score)},
+ {id:"all18",icon:"🗂️",check:s=>Object.keys(GAMES).length>0&&Object.keys(GAMES).every(id=>s.levels[id])}
 ];
 addI18n({
-tr:{badge_first:"İlk Adım",badge_first_d:"İlk oyununu oyna",badge_g10:"Isınma",badge_g10_d:"10 oyun tamamla",badge_g50:"Antrenör",badge_g50_d:"50 oyun tamamla",badge_g200:"Demir Beyin",badge_g200_d:"200 oyun tamamla",badge_s3:"Kıvılcım",badge_s3_d:"3 günlük seri",badge_s7:"Alev",badge_s7_d:"7 günlük seri",badge_s30:"Volkan",badge_s30_d:"30 günlük seri",badge_b400:"Gelişen Zihin",badge_b400_d:"400 Beyin Skoru",badge_b700:"Elmas Zihin",badge_b700_d:"700 Beyin Skoru",badge_allcat:"Çok Yönlü",badge_allcat_d:"Her kategoride oyna",badge_daily1:"Disiplin",badge_daily1_d:"Bir günlük antrenmanı bitir",badge_perfect:"Kusursuz",badge_perfect_d:"100 puanlık oyun",badge_lvl5:"Tırmanış",badge_lvl5_d:"Bir oyunda 5. seviye",badge_lvl10:"Zirve",badge_lvl10_d:"Bir oyunda 10. seviye",badge_zen:"Zen",badge_zen_d:"İlk nefes seansını bitir",badge_zen10:"İç Huzur",badge_zen10_d:"10 nefes seansı bitir"},
-en:{badge_first:"First Step",badge_first_d:"Play your first game",badge_g10:"Warm-up",badge_g10_d:"Complete 10 games",badge_g50:"Trainer",badge_g50_d:"Complete 50 games",badge_g200:"Iron Brain",badge_g200_d:"Complete 200 games",badge_s3:"Spark",badge_s3_d:"3-day streak",badge_s7:"Flame",badge_s7_d:"7-day streak",badge_s30:"Volcano",badge_s30_d:"30-day streak",badge_b400:"Growing Mind",badge_b400_d:"Brain Score 400",badge_b700:"Diamond Mind",badge_b700_d:"Brain Score 700",badge_allcat:"All-Rounder",badge_allcat_d:"Play every category",badge_daily1:"Discipline",badge_daily1_d:"Finish a daily workout",badge_perfect:"Flawless",badge_perfect_d:"Score 100 in a game",badge_lvl5:"Climber",badge_lvl5_d:"Reach level 5 in a game",badge_lvl10:"Summit",badge_lvl10_d:"Reach level 10 in a game",badge_zen:"Zen",badge_zen_d:"Finish your first breathing session",badge_zen10:"Inner Peace",badge_zen10_d:"Finish 10 breathing sessions"}
+tr:{badge_first:"İlk Adım",badge_first_d:"İlk oyununu oyna",badge_g10:"Isınma",badge_g10_d:"10 oyun tamamla",badge_g50:"Antrenör",badge_g50_d:"50 oyun tamamla",badge_g200:"Demir Beyin",badge_g200_d:"200 oyun tamamla",badge_s3:"Kıvılcım",badge_s3_d:"3 günlük seri",badge_s7:"Alev",badge_s7_d:"7 günlük seri",badge_s30:"Volkan",badge_s30_d:"30 günlük seri",badge_b400:"Gelişen Zihin",badge_b400_d:"400 Beyin Skoru",badge_b700:"Elmas Zihin",badge_b700_d:"700 Beyin Skoru",badge_allcat:"Çok Yönlü",badge_allcat_d:"Her kategoride oyna",badge_daily1:"Disiplin",badge_daily1_d:"Bir günlük antrenmanı bitir",badge_perfect:"Kusursuz",badge_perfect_d:"100 puanlık oyun",badge_lvl5:"Tırmanış",badge_lvl5_d:"Bir oyunda 5. seviye",badge_lvl10:"Zirve",badge_lvl10_d:"Bir oyunda 10. seviye",badge_zen:"Zen",badge_zen_d:"İlk nefes seansını bitir",badge_zen10:"İç Huzur",badge_zen10_d:"10 nefes seansı bitir",badge_iq1:"Düşünür",badge_iq1_d:"İlk bilişsel testi tamamla",badge_all18:"Koleksiyoncu",badge_all18_d:"Tüm oyunları en az bir kez oyna"},
+en:{badge_first:"First Step",badge_first_d:"Play your first game",badge_g10:"Warm-up",badge_g10_d:"Complete 10 games",badge_g50:"Trainer",badge_g50_d:"Complete 50 games",badge_g200:"Iron Brain",badge_g200_d:"Complete 200 games",badge_s3:"Spark",badge_s3_d:"3-day streak",badge_s7:"Flame",badge_s7_d:"7-day streak",badge_s30:"Volcano",badge_s30_d:"30-day streak",badge_b400:"Growing Mind",badge_b400_d:"Brain Score 400",badge_b700:"Diamond Mind",badge_b700_d:"Brain Score 700",badge_allcat:"All-Rounder",badge_allcat_d:"Play every category",badge_daily1:"Discipline",badge_daily1_d:"Finish a daily workout",badge_perfect:"Flawless",badge_perfect_d:"Score 100 in a game",badge_lvl5:"Climber",badge_lvl5_d:"Reach level 5 in a game",badge_lvl10:"Summit",badge_lvl10_d:"Reach level 10 in a game",badge_zen:"Zen",badge_zen_d:"Finish your first breathing session",badge_zen10:"Inner Peace",badge_zen10_d:"Finish 10 breathing sessions",badge_iq1:"Thinker",badge_iq1_d:"Complete your first cognitive test",badge_all18:"Collector",badge_all18_d:"Play every game at least once"}
 });
 function checkBadges(){
  BADGES.forEach(b=>{
@@ -1911,6 +1916,7 @@ function iqFinish(){
  IQ.score=toScore(avg(IQ.res.map(r=>r.correct)));
  IQ.dom={reasoning:toScore(avg(byDom.reasoning)),memory:toScore(avg(byDom.memory)),spatial:toScore(avg(byDom.spatial))};
  if(!S.iq||IQ.score>S.iq.score){S.iq={score:IQ.score,dom:IQ.dom,date:Date.now()};save();}
+ checkBadges();
 }
 function renderIQ(){
  iqStop();
