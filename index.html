@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>NeuroMind — Beyin Antrenmanı</title>
 <!-- v1.2.3 -->
 <meta name="theme-color" content="#0e1120">
@@ -24,13 +24,14 @@
 html,body{height:100%}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden}
 #app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
-header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top,0px)) 20px 10px;position:sticky;top:0;z-index:40;background:rgba(14,17,32,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .logo{font-weight:800;font-size:20px;letter-spacing:.3px}
 .logo span{background:linear-gradient(90deg,var(--memory),var(--math));-webkit-background-clip:text;background-clip:text;color:transparent}
 .langbtn{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer}
-main{flex:1;padding:6px 16px 90px}
-nav.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:rgba(21,26,48,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:50}
-nav.bottom button{flex:1;background:none;border:none;color:var(--muted);padding:10px 0 14px;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600}
+main{flex:1;padding:6px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+nav.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:rgba(21,26,48,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.bottom button{flex:1;min-width:0;background:none;border:none;color:var(--muted);padding:9px 2px 10px;font-size:10.5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:389px){nav.bottom button{font-size:9.5px}nav.bottom button .ic{font-size:18px}}
 nav.bottom button .ic{font-size:20px}
 nav.bottom button.on{color:var(--text)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
@@ -75,13 +76,13 @@ h2.sect{font-size:15px;color:var(--muted);font-weight:700;margin:18px 4px 10px;t
 /* play screen */
 #playwrap{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;max-width:560px;margin:0 auto}
 #playwrap.show{display:flex}
-.playhead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.playhead{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 12px;border-bottom:1px solid var(--line)}
 .playhead .pname{font-weight:800;font-size:15px}
 .playhead .quit{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:6px 12px;cursor:pointer;font-size:13px}
 .playinfo{display:flex;justify-content:space-between;padding:8px 16px;color:var(--muted);font-size:13px;font-weight:700}
 #timebar{height:5px;background:var(--bg2)}
 #timebarfill{height:100%;width:100%;background:linear-gradient(90deg,var(--good),var(--logic));transition:width .2s linear}
-#gamearea{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;position:relative}
+#gamearea{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));position:relative}
 /* overlays */
 .overlay{position:absolute;inset:0;background:rgba(14,17,32,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;z-index:5}
 .overlay .bigic{font-size:52px;margin-bottom:14px}
